@@ -1,10 +1,10 @@
 <template>
   <div class="app-container">
-    <!-- 侧边栏 -->
-    <AppSidebar v-if="!isAuthPage" />
+    <!-- 顶部导航栏 -->
+    <AppNavbar />
 
     <!-- 主内容区 -->
-    <main class="main-content" :class="{ 'full-width': isAuthPage }">
+    <main class="main-content">
       <RouterView v-slot="{ Component }">
         <Transition name="fade" mode="out-in">
           <component :is="Component" />
@@ -21,33 +21,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import AppSidebar from '@/components/layout/AppSidebar.vue'
+import AppNavbar from '@/components/layout/AppNavbar.vue'
 import ToastContainer from '@/components/common/ToastContainer.vue'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 
-const route = useRoute()
 const appStore = useAppStore()
-
-// 判断是否为认证页面（无侧边栏）
-const isAuthPage = computed(() => {
-  return ['Login', 'Register'].includes(route.name as string)
-})
 </script>
 
 <style scoped>
 .app-container {
-  @apply flex min-h-screen bg-gray-50 dark:bg-dark-900;
+  @apply min-h-screen bg-gray-50 dark:bg-dark-900 pt-16;
 }
 
 .main-content {
-  @apply flex-1 ml-64 transition-all duration-300;
-}
-
-.main-content.full-width {
-  @apply ml-0;
+  @apply transition-all duration-300;
 }
 
 /* 页面过渡动画 */

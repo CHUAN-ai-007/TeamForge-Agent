@@ -10,10 +10,22 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '首页' },
   },
   {
+    path: '/teams',
+    name: 'Teams',
+    component: () => import('@/views/teams/Teams.vue'),
+    meta: { title: '团队' },
+  },
+  {
     path: '/teams/new',
     name: 'NewTeam',
     component: () => import('@/views/teams/NewTeam.vue'),
     meta: { title: '新建团队' },
+  },
+  {
+    path: '/agents',
+    name: 'Agents',
+    component: () => import('@/views/agents/Agents.vue'),
+    meta: { title: '智能体' },
   },
   {
     path: '/teams/:id',
