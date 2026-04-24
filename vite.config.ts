@@ -1,9 +1,42 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+import { createProxyMiddleware } from 'http-proxy-middleware'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    {
+      name: 'configure-server',
+      configureServer(server) {
+        // 自定义代理中间件，解决开发环境 CORS 问题
+        server.middlewares.use('/proxy', (req, res, next) => {
+          const targetUrl = req.headers['x-target-url'] as string
+
+          if (!targetUrl) {
+            res.statusCode = 400
+            res.end('Missing x-target-url header')
+            return
+          }
+
+          console.log('[Proxy] Forwarding to:', targetUrl)
+
+          const proxy = createProxyMiddleware({
+            target: targetUrl,
+            changeOrigin: true,
+            pathRewrite: { '^/proxy': '' },
+            onError: (err, req, res) => {
+              console.error('[Proxy Error]:', err.message)
+              res.statusCode = 500
+              res.end(`Proxy Error: ${err.message}`)
+            },
+          })
+
+          proxy(req, res, next)
+        })
+      },
+    },
+  ],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -12,15 +45,6 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-    proxy: {
-      // 可选：配置代理解决开发环境 CORS 问题
-      // 使用方式：将接口地址设置为 '/api'，实际请求会代理到目标服务器
-      '/api': {
-        target: 'https://api.moonshot.cn',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
   },
   build: {
     target: 'esnext',

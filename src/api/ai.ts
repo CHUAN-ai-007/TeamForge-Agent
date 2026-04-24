@@ -5,6 +5,38 @@
 
 import type { AIModelConfig, AIResponse, StreamChunk } from '@/types'
 
+/**
+ * 构建请求配置
+ * 开发环境下使用 Vite 代理解决 CORS 问题
+ */
+function buildRequest(config: AIModelConfig): { url: string; headers: Record<string, string> } {
+  // 处理 baseURL，移除末尾斜杠
+  const baseURL = config.baseURL.replace(/\/$/, '')
+  const requestURL = `${baseURL}/chat/completions`
+
+  // 开发环境下，如果访问的是外部 API，使用代理
+  // @ts-expect-error import.meta.env is defined by Vite
+  if (import.meta.env.DEV && baseURL.startsWith('http')) {
+    console.log('[AI] Using proxy for:', requestURL)
+    return {
+      url: '/proxy/chat/completions',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.apiKey}`,
+        'x-target-url': baseURL, // 代理会根据这个 header 转发到目标服务器
+      },
+    }
+  }
+
+  return {
+    url: requestURL,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${config.apiKey}`,
+    },
+  }
+}
+
 export interface ChatCompletionMessage {
   role: 'system' | 'user' | 'assistant'
   content: string
@@ -39,12 +71,12 @@ export async function chatCompletion(
   }
 
   try {
-    const response = await fetch(`${config.baseURL}/chat/completions`, {
+    const { url, headers } = buildRequest(config)
+    console.log('[AI Request] URL:', url)
+
+    const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`,
-      },
+      headers,
       body: JSON.stringify(requestBody),
     })
 

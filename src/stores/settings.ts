@@ -3,6 +3,45 @@ import { ref, computed } from 'vue'
 import type { AIModelConfig } from '@/types'
 import { DEFAULT_MODEL_CONFIG } from '@/types'
 
+/**
+ * 构建测试请求配置
+ * 开发环境下使用 Vite 代理解决 CORS 问题
+ */
+function buildTestRequest(config: AIModelConfig): { url: string; headers: Record<string, string>; body: string } {
+  // 处理 baseURL，移除末尾斜杠
+  const baseURL = config.baseURL.replace(/\/$/, '')
+
+  const requestBody = JSON.stringify({
+    model: config.model,
+    messages: [{ role: 'user', content: 'Hello' }],
+    max_tokens: 5,
+  })
+
+  // 开发环境下，如果访问的是外部 API，使用代理
+  // @ts-expect-error import.meta.env is defined by Vite
+  if (import.meta.env.DEV && baseURL.startsWith('http')) {
+    console.log('[Test] Using proxy for:', baseURL)
+    return {
+      url: '/proxy/chat/completions',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.apiKey}`,
+        'x-target-url': baseURL,
+      },
+      body: requestBody,
+    }
+  }
+
+  return {
+    url: `${baseURL}/chat/completions`,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${config.apiKey}`,
+    },
+    body: requestBody,
+  }
+}
+
 const STORAGE_KEY = 'teamforge:settings'
 
 /**
@@ -120,29 +159,43 @@ export const useSettingsStore = defineStore('settings', () => {
    * 测试配置是否有效
    */
   async function testConfig(config: AIModelConfig): Promise<{ success: boolean; message: string }> {
+    // 验证配置
+    if (!config.baseURL.trim()) {
+      return { success: false, message: '错误: 接口地址不能为空' }
+    }
+    if (!config.apiKey.trim()) {
+      return { success: false, message: '错误: API Key 不能为空' }
+    }
+    if (!config.model.trim()) {
+      return { success: false, message: '错误: 模型名称不能为空' }
+    }
+
+    const { url, headers, body } = buildTestRequest(config)
+
+    console.log('[TestConfig] URL:', url)
+    console.log('[TestConfig] Model:', config.model)
+
     try {
-      const response = await fetch(`${config.baseURL}/chat/completions`, {
+      const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${config.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: config.model,
-          messages: [{ role: 'user', content: 'Hello' }],
-          max_tokens: 5,
-        }),
+        headers,
+        body,
       })
+
+      console.log('[TestConfig] Response status:', response.status)
 
       if (response.ok) {
         return { success: true, message: '连接成功' }
       } else {
         const errorData = await response.json().catch(() => null)
+        console.error('[TestConfig] API Error:', errorData)
         const errorMsg = errorData?.error?.message || errorData?.message || `HTTP ${response.status}`
         return { success: false, message: `连接失败: ${errorMsg}` }
       }
     } catch (e) {
-      return { success: false, message: `请求错误: ${e instanceof Error ? e.message : String(e)}` }
+      const errorMsg = e instanceof Error ? e.message : String(e)
+      console.error('[TestConfig] Fetch Error:', errorMsg)
+      return { success: false, message: `请求错误: ${errorMsg}` }
     }
   }
 
