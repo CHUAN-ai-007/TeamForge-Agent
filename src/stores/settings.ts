@@ -18,8 +18,8 @@ function buildTestRequest(config: AIModelConfig): { url: string; headers: Record
   })
 
   // 开发环境下，如果访问的是外部 API，使用代理
-  // @ts-expect-error import.meta.env is defined by Vite
-  if (import.meta.env.DEV && baseURL.startsWith('http')) {
+  // @ts-ignore
+  if (typeof import.meta.env !== 'undefined' && import.meta.env.DEV && baseURL.startsWith('http')) {
     console.log('[Test] Using proxy for:', baseURL)
     return {
       url: '/proxy/chat/completions',

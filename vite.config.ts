@@ -1,7 +1,11 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
-import { createProxyMiddleware } from 'http-proxy-middleware'
+
+// 获取目标 URL 从请求头
+function getTargetFromHeader(req: any): string | null {
+  return req.headers['x-target-url'] || null
+}
 
 export default defineConfig({
   plugins: [
@@ -10,8 +14,8 @@ export default defineConfig({
       name: 'configure-server',
       configureServer(server) {
         // 自定义代理中间件，解决开发环境 CORS 问题
-        server.middlewares.use('/proxy', (req, res, next) => {
-          const targetUrl = req.headers['x-target-url'] as string
+        server.middlewares.use('/proxy', async (req, res, next) => {
+          const targetUrl = getTargetFromHeader(req)
 
           if (!targetUrl) {
             res.statusCode = 400
@@ -19,20 +23,62 @@ export default defineConfig({
             return
           }
 
-          console.log('[Proxy] Forwarding to:', targetUrl)
+          try {
+            const target = `${targetUrl}/chat/completions`
+            console.log('[Proxy] Forwarding to:', target)
+            console.log('[Proxy] Method:', req.method)
+            console.log('[Proxy] Headers:', JSON.stringify(req.headers))
 
-          const proxy = createProxyMiddleware({
-            target: targetUrl,
-            changeOrigin: true,
-            pathRewrite: { '^/proxy': '' },
-            onError: (err, req, res) => {
-              console.error('[Proxy Error]:', err.message)
-              res.statusCode = 500
-              res.end(`Proxy Error: ${err.message}`)
-            },
-          })
+            // 构建转发请求
+            const fetchHeaders: Record<string, string> = {
+              'Content-Type': req.headers['content-type'] || 'application/json',
+              'Authorization': req.headers['authorization'] || '',
+            }
 
-          proxy(req, res, next)
+            // 获取请求体
+            let body = ''
+            req.on('data', (chunk: Buffer) => {
+              body += chunk.toString()
+            })
+
+            await new Promise<void>((resolve) => {
+              req.on('end', resolve)
+            })
+
+            console.log('[Proxy] Request body:', body)
+
+            // 发送请求到目标服务器
+            const response = await fetch(target, {
+              method: req.method,
+              headers: fetchHeaders,
+              body: body || undefined,
+            })
+
+            console.log('[Proxy] Response status:', response.status)
+
+            // 复制响应头
+            res.statusCode = response.status
+            response.headers.forEach((value, key) => {
+              res.setHeader(key, value)
+            })
+
+            // 添加 CORS 头
+            res.setHeader('Access-Control-Allow-Origin', '*')
+            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+
+            // 发送响应体
+            const responseBody = await response.text()
+            res.end(responseBody)
+
+          } catch (error) {
+            console.error('[Proxy Error]:', error)
+            res.statusCode = 500
+            res.end(JSON.stringify({
+              error: 'Proxy Error',
+              message: error instanceof Error ? error.message : String(error)
+            }))
+          }
         })
       },
     },

@@ -15,15 +15,15 @@ function buildRequest(config: AIModelConfig): { url: string; headers: Record<str
   const requestURL = `${baseURL}/chat/completions`
 
   // 开发环境下，如果访问的是外部 API，使用代理
-  // @ts-expect-error import.meta.env is defined by Vite
-  if (import.meta.env.DEV && baseURL.startsWith('http')) {
-    console.log('[AI] Using proxy for:', requestURL)
+  // @ts-ignore
+  if (typeof import.meta.env !== 'undefined' && import.meta.env.DEV && baseURL.startsWith('http')) {
+    console.log('[AI] Using proxy for:', baseURL)
     return {
       url: '/proxy/chat/completions',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${config.apiKey}`,
-        'x-target-url': baseURL, // 代理会根据这个 header 转发到目标服务器
+        'x-target-url': baseURL,
       },
     }
   }
