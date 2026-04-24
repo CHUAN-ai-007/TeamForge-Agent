@@ -56,12 +56,31 @@
         </button>
       </div>
 
-      <div v-if="team.agents.length > 0" class="agents-grid">
-        <AgentCard
-          v-for="agent in team.agents"
-          :key="agent.id"
-          :agent="agent"
-        />
+      <div v-if="team.agents.length > 0" class="agents-section">
+        <p class="drag-hint mb-3 text-sm text-gray-500">
+          <svg class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          拖拽智能体可调整顺序，第一位为团队负责人
+        </p>
+        <draggable
+          v-model="sortedAgents"
+          item-key="id"
+          handle=".drag-handle"
+          animation="200"
+          ghost-class="ghost-agent"
+          drag-class="dragging-agent"
+          @end="handleDragEnd"
+        >
+          <template #item="{ element, index }">
+            <AgentCard
+              :agent="element"
+              :is-leader="index === 0"
+              :draggable="true"
+              class="agent-item"
+            />
+          </template>
+        </draggable>
       </div>
 
       <div v-else class="empty-state">
@@ -118,10 +137,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTeamsStore } from '@/stores/teams'
 import { useAppStore } from '@/stores/app'
+import draggable from 'vuedraggable'
 import AgentCard from '@/components/agents/AgentCard.vue'
 import Modal from '@/components/common/Modal.vue'
 import { formatDate } from '@/utils'
@@ -133,6 +153,30 @@ const teamsStore = useTeamsStore()
 const appStore = useAppStore()
 
 const team = computed(() => teamsStore.currentTeam)
+
+// 排序后的智能体列表
+const sortedAgents = ref<Agent[]>([])
+
+// 同步团队智能体数据到排序列表
+watch(() => team.value?.agents, (agents) => {
+  if (agents) {
+    sortedAgents.value = [...agents]
+  }
+}, { immediate: true })
+
+// 拖拽结束处理
+function handleDragEnd() {
+  if (!team.value) return
+
+  // 更新团队中的智能体顺序
+  team.value.agents = [...sortedAgents.value]
+
+  // 保存到 localStorage
+  teamsStore.saveToStorage()
+
+  // 显示提示
+  appStore.showToast('排序已保存', 'success')
+}
 const showDeleteModal = ref(false)
 const showAddAgentModal = ref(false)
 
@@ -261,5 +305,26 @@ function handleAddAgent() {
 
 .form-label {
   @apply block text-sm font-medium text-gray-700 dark:text-gray-300;
+}
+
+/* 拖拽相关样式 */
+.agents-section {
+  @apply space-y-2;
+}
+
+.agent-item {
+  @apply mb-3;
+}
+
+.ghost-agent {
+  @apply opacity-50 bg-primary-50 dark:bg-primary-900/20 border-2 border-dashed border-primary-500;
+}
+
+.dragging-agent {
+  @apply opacity-90 shadow-2xl scale-[1.02];
+}
+
+.drag-hint {
+  @apply flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg;
 }
 </style>
