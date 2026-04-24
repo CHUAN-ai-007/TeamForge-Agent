@@ -2,11 +2,14 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { useTeamsStore } from '@/stores/teams'
 
+// 预加载关键页面组件
+import Home from '@/views/Home.vue'
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Home',
-    component: () => import('@/views/Home.vue'),
+    component: Home, // 首页直接导入，不懒加载
     meta: { title: '首页' },
   },
   {
@@ -33,13 +36,18 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/teams/TeamDetail.vue'),
     meta: { title: '团队详情' },
     beforeEnter: (to, from, next) => {
-      const teamsStore = useTeamsStore()
-      const teamId = to.params.id as string
-      const team = teamsStore.getTeam(teamId)
-      if (team) {
-        teamsStore.setCurrentTeam(teamId)
-        next()
-      } else {
+      try {
+        const teamsStore = useTeamsStore()
+        const teamId = to.params.id as string
+        const team = teamsStore.getTeam(teamId)
+        if (team) {
+          teamsStore.setCurrentTeam(teamId)
+          next()
+        } else {
+          next({ name: 'Home', replace: true })
+        }
+      } catch (e) {
+        console.error('Route guard error:', e)
         next({ name: 'Home', replace: true })
       }
     },
@@ -76,6 +84,11 @@ const router = createRouter({
   scrollBehavior() {
     return { top: 0 }
   },
+})
+
+// 全局错误处理
+router.onError((error) => {
+  console.error('Router error:', error)
 })
 
 // 更新页面标题

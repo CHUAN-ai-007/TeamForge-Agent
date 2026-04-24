@@ -7,15 +7,15 @@
       </svg>
     </div>
 
-    <router-link :to="`/teams/${agent.teamId}/agents/${agent.id}`" class="agent-card">
-      <!-- 负责人角标 -->
-      <div v-if="isLeader" class="leader-badge">
-        <svg class="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-        负责人
-      </div>
+    <!-- 负责人角标 - 卡片左上角 -->
+    <div v-if="isLeader" class="leader-badge">
+      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+      <span>负责人</span>
+    </div>
 
+    <router-link :to="`/teams/${agent.teamId}/agents/${agent.id}`" class="agent-card">
       <div class="agent-avatar">{{ agent.meta.avatar }}</div>
       <div class="agent-info">
         <h4 class="agent-name">{{ agent.meta.name }}</h4>
@@ -62,6 +62,14 @@ const levelText = {
   @apply relative flex items-center gap-2;
 }
 
+.leader-badge {
+  @apply absolute -top-1.5 left-10 flex items-center gap-0.5 px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-medium rounded-full shadow-md z-20;
+}
+
+.leader-badge svg {
+  @apply w-2.5 h-2.5;
+}
+
 .drag-handle {
   @apply p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing;
 }
@@ -71,7 +79,7 @@ const levelText = {
 }
 
 .agent-card {
-  @apply flex-1 flex items-center gap-4 p-4 bg-white dark:bg-dark-800 rounded-xl border border-gray-200 dark:border-dark-700 hover:border-primary-500 dark:hover:border-primary-500 transition-all duration-200 hover:shadow-md relative;
+  @apply flex-1 flex items-center gap-4 p-4 bg-white dark:bg-dark-800 rounded-xl border border-gray-200 dark:border-dark-700 hover:border-primary-500 dark:hover:border-primary-500 transition-all duration-200 hover:shadow-md;
 }
 
 .agent-avatar {
@@ -116,13 +124,5 @@ const levelText = {
 
 .level-executive {
   @apply bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400;
-}
-
-.leader-badge {
-  @apply absolute -top-2 -right-2 flex items-center px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium rounded-full shadow-lg z-10;
-}
-
-.leader-badge svg {
-  @apply animate-pulse;
 }
 </style>

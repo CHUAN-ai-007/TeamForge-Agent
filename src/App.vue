@@ -5,9 +5,19 @@
 
     <!-- 主内容区 -->
     <main class="main-content">
-      <RouterView v-slot="{ Component }">
+      <RouterView v-slot="{ Component, route }">
         <Transition name="fade" mode="out-in">
-          <component :is="Component" />
+          <Suspense :key="route.path">
+            <template #default>
+              <component :is="Component" />
+            </template>
+            <template #fallback>
+              <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">加载中...</p>
+              </div>
+            </template>
+          </Suspense>
         </Transition>
       </RouterView>
     </main>
@@ -47,5 +57,18 @@ const appStore = useAppStore()
 .fade-enter-from,
 .fade-leave-to {
   @apply opacity-0;
+}
+
+/* 加载状态 */
+.loading-container {
+  @apply flex flex-col items-center justify-center min-h-[60vh] gap-4;
+}
+
+.loading-spinner {
+  @apply w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin;
+}
+
+.loading-text {
+  @apply text-gray-500 dark:text-gray-400 text-sm;
 }
 </style>
