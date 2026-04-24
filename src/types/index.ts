@@ -66,6 +66,7 @@ export interface AgentWork {
 export interface Agent {
   id: string
   teamId: string
+  orgUnitId: string | null
   meta: AgentMeta
   persona: AgentPersona
   work: AgentWork
@@ -73,6 +74,19 @@ export interface Agent {
   metaContent: string
   personaContent: string
   workContent: string
+}
+
+// ============ 组织单元类型定义 ============
+
+export interface OrgUnit {
+  id: string
+  name: string
+  type: 'company' | 'department' | 'group' | 'team'
+  parentId: string | null
+  description: string
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
 }
 
 // ============ 团队类型定义 ============
@@ -90,6 +104,7 @@ export interface TeamInfo {
 
 export interface Team {
   info: TeamInfo
+  orgStructure: OrgUnit[]
   agents: Agent[]
 }
 

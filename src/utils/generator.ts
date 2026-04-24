@@ -3,7 +3,7 @@
  * 负责分析企业信息并生成完整的 Agent 团队
  */
 
-import { generateText, generateJSON, type ChatCompletionMessage } from '@/api/ai'
+import { generateText, generateJSON } from '@/api/ai'
 import type { AIModelConfig, Agent, AgentMeta, AgentPersona, AgentWork } from '@/types'
 
 export interface TeamAnalysis {
@@ -90,13 +90,14 @@ export async function generateAgent(
   // 步骤4：解析并构建 Agent 对象
   progressCallback?.({ step: `正在整合 ${roleInfo.name} 的完整档案...`, progress: 90 })
 
-  const meta = parseMetaContent(metaContent, agentId, teamId)
+  const meta = parseMetaContent(metaContent, agentId)
   const persona = parsePersonaContent(personaContent)
   const work = parseWorkContent(workContent)
 
   return {
     id: agentId,
     teamId,
+    orgUnitId: null,
     meta,
     persona,
     work,
@@ -263,7 +264,7 @@ ${persona.slice(0, 500)}...
 /**
  * 解析 meta 内容
  */
-function parseMetaContent(content: AgentMeta, agentId: string, teamId: string): AgentMeta {
+function parseMetaContent(content: AgentMeta, agentId: string): AgentMeta {
   return {
     ...content,
     id: agentId,

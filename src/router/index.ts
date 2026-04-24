@@ -50,6 +50,11 @@ const routes: RouteRecordRaw[] = [
         const team = teamsStore.getTeam(teamId)
         if (team) {
           teamsStore.setCurrentTeam(teamId)
+          // 自动选中根组织（parentId 为 null 的组织）
+          const rootOrg = team.orgStructure.find(u => u.parentId === null)
+          if (rootOrg) {
+            teamsStore.setCurrentOrgUnit(rootOrg.id)
+          }
           next()
         } else {
           next({ name: 'Home', replace: true })

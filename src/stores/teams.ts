@@ -1,8 +1,45 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Team, TeamInfo, Agent } from '@/types'
+import type { Team, TeamInfo, Agent, OrgUnit } from '@/types'
 
 const STORAGE_KEY = 'teamforge:teams'
+
+/**
+ * 创建默认组织架构（以公司名称为根节点）
+ */
+function createDefaultOrgStructure(teamName: string): OrgUnit[] {
+  const now = new Date().toISOString()
+  return [{
+    id: `org_${Date.now()}`,
+    name: teamName,
+    type: 'company',
+    parentId: null,
+    description: '公司总部',
+    sortOrder: 0,
+    createdAt: now,
+    updatedAt: now,
+  }]
+}
+
+/**
+ * 构建组织单元树
+ */
+function buildOrgTree(units: OrgUnit[], parentId: string | null = null): Array<OrgUnit & { children: OrgUnit[] }> {
+  const result: Array<OrgUnit & { children: OrgUnit[] }> = []
+
+  const directChildren = units
+    .filter(u => u.parentId === parentId)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+
+  for (const unit of directChildren) {
+    result.push({
+      ...unit,
+      children: buildOrgTree(units, unit.id),
+    })
+  }
+
+  return result
+}
 
 /**
  * 团队状态管理
@@ -12,6 +49,7 @@ export const useTeamsStore = defineStore('teams', () => {
   const teams = ref<Team[]>(loadTeams())
   const currentTeamId = ref<string | null>(null)
   const currentAgentId = ref<string | null>(null)
+  const currentOrgUnitId = ref<string | null>(null)
 
   // ============ Getters ============
   const currentTeam = computed(() => {
@@ -23,10 +61,43 @@ export const useTeamsStore = defineStore('teams', () => {
     return currentTeam.value.agents.find(a => a.id === currentAgentId.value) || null
   })
 
+  const currentOrgUnit = computed(() => {
+    if (!currentTeam.value || !currentOrgUnitId.value) return null
+    return currentTeam.value.orgStructure.find(u => u.id === currentOrgUnitId.value) || null
+  })
+
   const teamList = computed(() => teams.value.map(t => t.info))
 
   const totalAgents = computed(() => {
     return teams.value.reduce((sum, team) => sum + team.agents.length, 0)
+  })
+
+  /**
+   * 当前团队的组织架构树
+   */
+  const orgTree = computed(() => {
+    if (!currentTeam.value) return []
+    return buildOrgTree(currentTeam.value.orgStructure)
+  })
+
+  /**
+   * 获取当前选中组织单元的直属成员
+   */
+  const currentOrgUnitAgents = computed(() => {
+    if (!currentTeam.value || !currentOrgUnitId.value) return []
+    return currentTeam.value.agents
+      .filter(a => a.orgUnitId === currentOrgUnitId.value)
+      .sort((a, b) => a.meta.name.localeCompare(b.meta.name))
+  })
+
+  /**
+   * 获取当前选中组织单元的所有子组织单元
+   */
+  const currentOrgUnitChildren = computed(() => {
+    if (!currentTeam.value || !currentOrgUnitId.value) return []
+    return currentTeam.value.orgStructure
+      .filter(u => u.parentId === currentOrgUnitId.value)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
   })
 
   // ============ Actions ============
@@ -62,14 +133,17 @@ export const useTeamsStore = defineStore('teams', () => {
    */
   function createTeam(teamInfo: Omit<TeamInfo, 'id' | 'agentCount' | 'createdAt' | 'updatedAt'>) {
     const now = new Date().toISOString()
+    const teamId = `team_${Date.now()}`
+    const orgStructure = createDefaultOrgStructure(teamInfo.name)
     const newTeam: Team = {
       info: {
         ...teamInfo,
-        id: `team_${Date.now()}`,
+        id: teamId,
         agentCount: 0,
         createdAt: now,
         updatedAt: now,
       },
+      orgStructure,
       agents: [],
     }
     teams.value.unshift(newTeam)
@@ -123,11 +197,173 @@ export const useTeamsStore = defineStore('teams', () => {
   }
 
   /**
+   * 设置当前组织单元
+   */
+  function setCurrentOrgUnit(orgUnitId: string | null) {
+    currentOrgUnitId.value = orgUnitId
+  }
+
+  // ============ 组织单元管理 ============
+
+  /**
+   * 添加组织单元
+   */
+  function addOrgUnit(teamId: string, unit: Omit<OrgUnit, 'id' | 'createdAt' | 'updatedAt'>): OrgUnit | null {
+    const team = teams.value.find(t => t.info.id === teamId)
+    if (!team) return null
+
+    const now = new Date().toISOString()
+    const newUnit: OrgUnit = {
+      ...unit,
+      id: `org_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      createdAt: now,
+      updatedAt: now,
+    }
+
+    team.orgStructure.push(newUnit)
+    saveToStorage()
+    return newUnit
+  }
+
+  /**
+   * 更新组织单元
+   */
+  function updateOrgUnit(teamId: string, unitId: string, updates: Partial<OrgUnit>): boolean {
+    const team = teams.value.find(t => t.info.id === teamId)
+    if (!team) return false
+
+    const unitIndex = team.orgStructure.findIndex(u => u.id === unitId)
+    if (unitIndex > -1) {
+      team.orgStructure[unitIndex] = {
+        ...team.orgStructure[unitIndex],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      }
+      saveToStorage()
+      return true
+    }
+    return false
+  }
+
+  /**
+   * 删除组织单元（如果有子组织或成员则不能删除）
+   */
+  function deleteOrgUnit(teamId: string, unitId: string): { success: boolean; message?: string } {
+    const team = teams.value.find(t => t.info.id === teamId)
+    if (!team) return { success: false, message: '团队不存在' }
+
+    // 检查是否有子组织
+    const hasChildren = team.orgStructure.some(u => u.parentId === unitId)
+    if (hasChildren) {
+      return { success: false, message: '请先删除下属组织' }
+    }
+
+    // 检查是否有成员
+    const hasAgents = team.agents.some(a => a.orgUnitId === unitId)
+    if (hasAgents) {
+      return { success: false, message: '请先移除该组织下的成员' }
+    }
+
+    const index = team.orgStructure.findIndex(u => u.id === unitId)
+    if (index > -1) {
+      // 不能删除根组织
+      if (team.orgStructure[index].parentId === null && team.orgStructure.length > 1) {
+        return { success: false, message: '不能删除根组织' }
+      }
+
+      team.orgStructure.splice(index, 1)
+      if (currentOrgUnitId.value === unitId) {
+        currentOrgUnitId.value = null
+      }
+      saveToStorage()
+      return { success: true }
+    }
+    return { success: false, message: '组织不存在' }
+  }
+
+  /**
+   * 移动组织单元（更改父级）
+   */
+  function moveOrgUnit(teamId: string, unitId: string, newParentId: string | null): boolean {
+    const team = teams.value.find(t => t.info.id === teamId)
+    if (!team) return false
+
+    // 不能移动到自己子树下
+    if (newParentId) {
+      let current: string | null = newParentId
+      while (current) {
+        const parent = team.orgStructure.find(u => u.id === current)
+        if (!parent) break
+        if (parent.parentId === unitId) return false
+        current = parent.parentId
+      }
+    }
+
+    return updateOrgUnit(teamId, unitId, { parentId: newParentId })
+  }
+
+  /**
+   * 重新排序组织单元
+   */
+  function reorderOrgUnits(teamId: string, unitIds: string[]): boolean {
+    const team = teams.value.find(t => t.info.id === teamId)
+    if (!team) return false
+
+    unitIds.forEach((id, index) => {
+      const unit = team.orgStructure.find(u => u.id === id)
+      if (unit) {
+        unit.sortOrder = index
+      }
+    })
+    saveToStorage()
+    return true
+  }
+
+  /**
+   * 获取组织单元路径
+   */
+  function getOrgUnitPath(teamId: string, unitId: string): OrgUnit[] {
+    const team = teams.value.find(t => t.info.id === teamId)
+    if (!team) return []
+
+    const path: OrgUnit[] = []
+    let currentId: string | null = unitId
+
+    while (currentId) {
+      const unit = team.orgStructure.find(u => u.id === currentId)
+      if (!unit) break
+      path.unshift(unit)
+      currentId = unit.parentId
+    }
+
+    return path
+  }
+
+  /**
+   * 获取组织单元的直接子组织
+   */
+  function getOrgUnitChildren(teamId: string, parentId: string | null): OrgUnit[] {
+    const team = teams.value.find(t => t.info.id === teamId)
+    if (!team) return []
+
+    return team.orgStructure
+      .filter(u => u.parentId === parentId)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+  }
+
+  /**
    * 添加 Agent 到团队
    */
   function addAgent(teamId: string, agent: Agent) {
     const team = teams.value.find(t => t.info.id === teamId)
     if (team) {
+      // 如果没有指定组织单元，默认挂载到根组织
+      if (!agent.orgUnitId) {
+        const rootOrg = team.orgStructure.find(u => u.parentId === null)
+        if (rootOrg) {
+          agent.orgUnitId = rootOrg.id
+        }
+      }
       team.agents.push(agent)
       team.info.agentCount = team.agents.length
       team.info.updatedAt = new Date().toISOString()
@@ -143,6 +379,12 @@ export const useTeamsStore = defineStore('teams', () => {
   function addAgents(teamId: string, agents: Agent[]) {
     const team = teams.value.find(t => t.info.id === teamId)
     if (team) {
+      const rootOrg = team.orgStructure.find(u => u.parentId === null)
+      agents.forEach(agent => {
+        if (!agent.orgUnitId && rootOrg) {
+          agent.orgUnitId = rootOrg.id
+        }
+      })
       team.agents.push(...agents)
       team.info.agentCount = team.agents.length
       team.info.updatedAt = new Date().toISOString()
@@ -210,17 +452,30 @@ export const useTeamsStore = defineStore('teams', () => {
     teams,
     currentTeamId,
     currentAgentId,
+    currentOrgUnitId,
     // Getters
     currentTeam,
     currentAgent,
+    currentOrgUnit,
     teamList,
     totalAgents,
+    orgTree,
+    currentOrgUnitAgents,
+    currentOrgUnitChildren,
     // Actions
     createTeam,
     updateTeam,
     deleteTeam,
     setCurrentTeam,
     setCurrentAgent,
+    setCurrentOrgUnit,
+    addOrgUnit,
+    updateOrgUnit,
+    deleteOrgUnit,
+    moveOrgUnit,
+    reorderOrgUnits,
+    getOrgUnitPath,
+    getOrgUnitChildren,
     addAgent,
     addAgents,
     updateAgent,

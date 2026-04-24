@@ -23,13 +23,11 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import AppNavbar from '@/components/layout/AppNavbar.vue'
 import ToastContainer from '@/components/common/ToastContainer.vue'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 
-const route = useRoute()
 const appStore = useAppStore()
 </script>
 
