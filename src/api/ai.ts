@@ -19,7 +19,7 @@ function buildRequest(config: AIModelConfig): { url: string; headers: Record<str
   if (typeof import.meta.env !== 'undefined' && import.meta.env.DEV && baseURL.startsWith('http')) {
     console.log('[AI] Using proxy for:', baseURL)
     return {
-      url: '/proxy/chat/completions',
+      url: '/api/proxy',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${config.apiKey}`,

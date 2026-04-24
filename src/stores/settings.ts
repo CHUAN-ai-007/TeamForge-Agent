@@ -22,7 +22,7 @@ function buildTestRequest(config: AIModelConfig): { url: string; headers: Record
   if (typeof import.meta.env !== 'undefined' && import.meta.env.DEV && baseURL.startsWith('http')) {
     console.log('[Test] Using proxy for:', baseURL)
     return {
-      url: '/proxy/chat/completions',
+      url: '/api/proxy',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${config.apiKey}`,
