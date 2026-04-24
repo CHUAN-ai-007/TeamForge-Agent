@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { AIModelConfig } from '@/types'
 import { DEFAULT_MODEL_CONFIG } from '@/types'
-import { buildRequestURL, buildRequestHeaders, isCORSError, getCORSSolutions } from '@/utils/proxy'
 
 const STORAGE_KEY = 'teamforge:settings'
 
@@ -122,13 +121,12 @@ export const useSettingsStore = defineStore('settings', () => {
    */
   async function testConfig(config: AIModelConfig): Promise<{ success: boolean; message: string }> {
     try {
-      const url = buildRequestURL(config)
-      const headers = buildRequestHeaders(config)
-
-      // 使用简单的 chat completion 请求测试，而非 /models（兼容性更好）
-      const response = await fetch(url, {
+      const response = await fetch(`${config.baseURL}/chat/completions`, {
         method: 'POST',
-        headers,
+        headers: {
+          'Authorization': `Bearer ${config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           model: config.model,
           messages: [{ role: 'user', content: 'Hello' }],
@@ -144,14 +142,7 @@ export const useSettingsStore = defineStore('settings', () => {
         return { success: false, message: `连接失败: ${errorMsg}` }
       }
     } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : String(e)
-      if (isCORSError(e instanceof Error ? e : new Error(errorMsg))) {
-        return {
-          success: false,
-          message: `CORS 跨域错误\n\n${getCORSSolutions()}`
-        }
-      }
-      return { success: false, message: `请求错误: ${errorMsg}` }
+      return { success: false, message: `请求错误: ${e instanceof Error ? e.message : String(e)}` }
     }
   }
 

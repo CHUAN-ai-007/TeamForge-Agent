@@ -15,9 +15,6 @@ export interface AIModelConfig {
   maxTokens: number
   topP: number
   enabled: boolean
-  // 代理配置（可选）
-  proxyURL?: string
-  proxyAuthHeader?: string
 }
 
 export const DEFAULT_MODEL_CONFIG: AIModelConfig = {
