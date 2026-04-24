@@ -2,38 +2,46 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { useTeamsStore } from '@/stores/teams'
 
-// 预加载关键页面组件
+// 同步导入所有页面组件，避免懒加载问题
 import Home from '@/views/Home.vue'
+import Teams from '@/views/teams/Teams.vue'
+import NewTeam from '@/views/teams/NewTeam.vue'
+import TeamDetail from '@/views/teams/TeamDetail.vue'
+import Agents from '@/views/agents/Agents.vue'
+import AgentDetail from '@/views/agents/AgentDetail.vue'
+import TeamChat from '@/views/chat/TeamChat.vue'
+import Settings from '@/views/settings/Settings.vue'
+import NotFound from '@/views/NotFound.vue'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Home',
-    component: Home, // 首页直接导入，不懒加载
+    component: Home,
     meta: { title: '首页' },
   },
   {
     path: '/teams',
     name: 'Teams',
-    component: () => import('@/views/teams/Teams.vue'),
+    component: Teams,
     meta: { title: '团队' },
   },
   {
     path: '/teams/new',
     name: 'NewTeam',
-    component: () => import('@/views/teams/NewTeam.vue'),
+    component: NewTeam,
     meta: { title: '新建团队' },
   },
   {
     path: '/agents',
     name: 'Agents',
-    component: () => import('@/views/agents/Agents.vue'),
+    component: Agents,
     meta: { title: '智能体' },
   },
   {
     path: '/teams/:id',
     name: 'TeamDetail',
-    component: () => import('@/views/teams/TeamDetail.vue'),
+    component: TeamDetail,
     meta: { title: '团队详情' },
     beforeEnter: (to, from, next) => {
       try {
@@ -55,25 +63,25 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/teams/:teamId/agents/:agentId',
     name: 'AgentDetail',
-    component: () => import('@/views/agents/AgentDetail.vue'),
+    component: AgentDetail,
     meta: { title: 'Agent 详情' },
   },
   {
     path: '/teams/:id/chat',
     name: 'TeamChat',
-    component: () => import('@/views/chat/TeamChat.vue'),
+    component: TeamChat,
     meta: { title: '团队对话' },
   },
   {
     path: '/settings',
     name: 'Settings',
-    component: () => import('@/views/settings/Settings.vue'),
+    component: Settings,
     meta: { title: '设置' },
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
-    component: () => import('@/views/NotFound.vue'),
+    component: NotFound,
     meta: { title: '页面不存在' },
   },
 ]
