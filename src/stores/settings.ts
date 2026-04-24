@@ -121,19 +121,26 @@ export const useSettingsStore = defineStore('settings', () => {
    */
   async function testConfig(config: AIModelConfig): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${config.baseURL}/models`, {
-        method: 'GET',
+      // 使用简单的 chat completion 请求测试，而非 /models（兼容性更好）
+      const response = await fetch(`${config.baseURL}/chat/completions`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${config.apiKey}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          model: config.model,
+          messages: [{ role: 'user', content: 'Hello' }],
+          max_tokens: 5,
+        }),
       })
 
       if (response.ok) {
         return { success: true, message: '连接成功' }
       } else {
-        const error = await response.text()
-        return { success: false, message: `连接失败: ${error}` }
+        const errorData = await response.json().catch(() => null)
+        const errorMsg = errorData?.error?.message || errorData?.message || `HTTP ${response.status}`
+        return { success: false, message: `连接失败: ${errorMsg}` }
       }
     } catch (e) {
       return { success: false, message: `请求错误: ${e instanceof Error ? e.message : String(e)}` }

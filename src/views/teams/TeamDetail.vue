@@ -44,8 +44,16 @@
     <!-- Agent 列表 -->
     <section class="agents-section">
       <div class="section-header">
-        <h2 class="section-title">团队成员</h2>
-        <span class="text-sm text-gray-500">共 {{ team.agents.length }} 位</span>
+        <div class="flex items-center gap-3">
+          <h2 class="section-title !mb-0">团队成员</h2>
+          <span class="text-sm text-gray-500">共 {{ team.agents.length }} 位</span>
+        </div>
+        <button class="btn-primary text-sm" @click="showAddAgentModal = true">
+          <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          添加智能体
+        </button>
       </div>
 
       <div v-if="team.agents.length > 0" class="agents-grid">
@@ -72,6 +80,41 @@
       <button class="btn-danger" @click="handleDelete">确认删除</button>
     </template>
   </Modal>
+
+  <!-- 添加智能体弹窗 -->
+  <Modal v-model="showAddAgentModal" title="添加智能体" size="md">
+    <div class="space-y-4">
+      <div class="form-group">
+        <label class="form-label">智能体名称 <span class="text-red-500">*</span></label>
+        <input v-model="newAgentForm.name" type="text" class="input" placeholder="例如：产品经理">
+      </div>
+      <div class="form-group">
+        <label class="form-label">岗位角色 <span class="text-red-500">*</span></label>
+        <input v-model="newAgentForm.role" type="text" class="input" placeholder="例如：高级产品经理">
+      </div>
+      <div class="form-group">
+        <label class="form-label">所属部门</label>
+        <input v-model="newAgentForm.department" type="text" class="input" placeholder="例如：产品部">
+      </div>
+      <div class="form-group">
+        <label class="form-label">职级</label>
+        <select v-model="newAgentForm.level" class="input">
+          <option value="junior">初级</option>
+          <option value="senior">资深</option>
+          <option value="lead">主管</option>
+          <option value="executive">高管</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">能力标签（用逗号分隔）</label>
+        <input v-model="newAgentForm.tags" type="text" class="input" placeholder="例如：产品规划,需求分析,用户研究">
+      </div>
+    </div>
+    <template #footer>
+      <button class="btn-secondary" @click="showAddAgentModal = false">取消</button>
+      <button class="btn-primary" @click="handleAddAgent" :disabled="!isFormValid">确认添加</button>
+    </template>
+  </Modal>
 </template>
 
 <script setup lang="ts">
@@ -82,6 +125,7 @@ import { useAppStore } from '@/stores/app'
 import AgentCard from '@/components/agents/AgentCard.vue'
 import Modal from '@/components/common/Modal.vue'
 import { formatDate } from '@/utils'
+import type { Agent } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -90,6 +134,21 @@ const appStore = useAppStore()
 
 const team = computed(() => teamsStore.currentTeam)
 const showDeleteModal = ref(false)
+const showAddAgentModal = ref(false)
+
+// 新智能体表单
+const newAgentForm = ref({
+  name: '',
+  role: '',
+  department: '',
+  level: 'senior' as const,
+  tags: ''
+})
+
+// 表单验证
+const isFormValid = computed(() => {
+  return newAgentForm.value.name.trim() && newAgentForm.value.role.trim()
+})
 
 function confirmDelete() {
   showDeleteModal.value = true
@@ -101,6 +160,61 @@ function handleDelete() {
     appStore.showToast('团队已删除', 'success')
     router.push('/')
   }
+}
+
+function handleAddAgent() {
+  if (!team.value || !isFormValid.value) return
+
+  const now = new Date().toISOString()
+  const agentId = `agent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
+  const newAgent: Agent = {
+    id: agentId,
+    teamId: team.value.info.id,
+    meta: {
+      id: agentId,
+      name: newAgentForm.value.name,
+      avatar: '👤',
+      role: newAgentForm.value.role,
+      department: newAgentForm.value.department || '未分配',
+      level: newAgentForm.value.level,
+      tags: newAgentForm.value.tags.split(',').map(t => t.trim()).filter(Boolean),
+      permissions: [],
+      createdAt: now,
+      updatedAt: now
+    },
+    persona: {
+      identity: `${newAgentForm.value.name}，${newAgentForm.value.role}，负责${newAgentForm.value.department || '团队'}相关工作。`,
+      personality: '专业、负责、善于沟通',
+      background: '具备丰富的行业经验和专业知识',
+      communicationStyle: '清晰、直接、友好',
+      values: ['专业', '协作', '创新'],
+      expertise: newAgentForm.value.tags.split(',').map(t => t.trim()).filter(Boolean)
+    },
+    work: {
+      responsibilities: ['完成本职工作', '协助团队协作', '推动项目进展'],
+      workflow: '1. 接收任务 2. 分析需求 3. 执行工作 4. 反馈结果',
+      collaborationRules: ['及时沟通', '主动协作', '共享信息'],
+      boundaries: ['不越级决策', '遵守流程规范'],
+      kpis: ['任务完成率', '协作满意度']
+    },
+    metaContent: '',
+    personaContent: '',
+    workContent: ''
+  }
+
+  teamsStore.addAgent(team.value.info.id, newAgent)
+  appStore.showToast(`智能体 "${newAgentForm.value.name}" 添加成功！`, 'success')
+
+  // 重置表单并关闭弹窗
+  newAgentForm.value = {
+    name: '',
+    role: '',
+    department: '',
+    level: 'senior',
+    tags: ''
+  }
+  showAddAgentModal.value = false
 }
 </script>
 
@@ -139,5 +253,13 @@ function handleDelete() {
 
 .empty-state {
   @apply card py-8 text-center;
+}
+
+.form-group {
+  @apply space-y-1.5;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-gray-700 dark:text-gray-300;
 }
 </style>

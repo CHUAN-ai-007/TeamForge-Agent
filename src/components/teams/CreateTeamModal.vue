@@ -34,7 +34,7 @@
           <span class="progress-title">AI 正在生成团队...</span>
         </div>
         <div class="progress-bar">
-          <div class="progress-fill" :style="{ width: `${progress}%`"></div>
+          <div class="progress-fill" :style="{ width: `${progress}%` }"></div>
         </div>
         <p class="progress-step">{{ currentStep }}</p>
       </div>
