@@ -121,8 +121,10 @@ export const useSettingsStore = defineStore('settings', () => {
    */
   async function testConfig(config: AIModelConfig): Promise<{ success: boolean; message: string }> {
     try {
+      // 处理 baseURL，移除末尾的斜杠避免双斜杠
+      const baseURL = config.baseURL.replace(/\/$/, '')
       // 使用简单的 chat completion 请求测试，而非 /models（兼容性更好）
-      const response = await fetch(`${config.baseURL}/chat/completions`, {
+      const response = await fetch(`${baseURL}/chat/completions`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${config.apiKey}`,
@@ -143,7 +145,14 @@ export const useSettingsStore = defineStore('settings', () => {
         return { success: false, message: `连接失败: ${errorMsg}` }
       }
     } catch (e) {
-      return { success: false, message: `请求错误: ${e instanceof Error ? e.message : String(e)}` }
+      const errorMsg = e instanceof Error ? e.message : String(e)
+      if (errorMsg.includes('Failed to fetch')) {
+        return {
+          success: false,
+          message: '连接失败: 无法访问 API 服务器。可能原因：\n1. 接口地址错误或服务器无响应\n2. 浏览器 CORS 跨域限制（尝试使用浏览器扩展解决）\n3. 网络连接问题'
+        }
+      }
+      return { success: false, message: `请求错误: ${errorMsg}` }
     }
   }
 

@@ -39,7 +39,9 @@ export async function chatCompletion(
   }
 
   try {
-    const response = await fetch(`${config.baseURL}/chat/completions`, {
+    // 处理 baseURL，移除末尾的斜杠避免双斜杠
+    const baseURL = config.baseURL.replace(/\/$/, '')
+    const response = await fetch(`${baseURL}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
