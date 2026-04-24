@@ -4,6 +4,7 @@
  */
 
 import type { AIModelConfig, AIResponse, StreamChunk } from '@/types'
+import { buildRequestURL, buildRequestHeaders, isCORSError, getCORSSolutions } from '@/utils/proxy'
 
 export interface ChatCompletionMessage {
   role: 'system' | 'user' | 'assistant'
@@ -39,14 +40,12 @@ export async function chatCompletion(
   }
 
   try {
-    // 处理 baseURL，移除末尾的斜杠避免双斜杠
-    const baseURL = config.baseURL.replace(/\/$/, '')
-    const response = await fetch(`${baseURL}/chat/completions`, {
+    const url = buildRequestURL(config)
+    const headers = buildRequestHeaders(config)
+
+    const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`,
-      },
+      headers,
       body: JSON.stringify(requestBody),
     })
 
@@ -68,6 +67,10 @@ export async function chatCompletion(
     }
   } catch (error) {
     console.error('AI 请求失败:', error)
+    if (error instanceof Error && isCORSError(error)) {
+      console.error(getCORSSolutions())
+      throw new Error(`CORS 跨域错误: 无法直接访问 API 服务器。\n\n${getCORSSolutions()}`)
+    }
     throw error
   }
 }

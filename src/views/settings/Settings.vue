@@ -131,6 +131,26 @@
               <p class="form-hint">选择要使用的 AI 模型</p>
             </div>
 
+            <!-- 代理配置 -->
+            <div class="form-group">
+              <div class="flex items-center justify-between">
+                <label class="form-label">代理地址（可选）</label>
+                <button
+                  class="text-xs text-primary-600 hover:text-primary-700"
+                  @click="showCORSHelp = true"
+                >
+                  什么是 CORS？为什么需要代理？
+                </button>
+              </div>
+              <input
+                v-model="config.proxyURL"
+                type="text"
+                class="input"
+                placeholder="https://your-proxy-server.com/api"
+              >
+              <p class="form-hint">用于解决浏览器 CORS 跨域限制，留空则直接请求</p>
+            </div>
+
             <!-- 高级参数 -->
             <div class="form-row">
               <div class="form-group">
@@ -194,6 +214,60 @@
       </div>
     </section>
 
+    <!-- CORS 帮助弹窗 -->
+    <Modal v-model="showCORSHelp" title="CORS 跨域说明" size="lg">
+      <div class="space-y-4 text-sm">
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+          <h4 class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">⚠️ 为什么出现 CORS 错误？</h4>
+          <p class="text-yellow-700 dark:text-yellow-300">
+            浏览器的安全策略禁止网页直接访问不同域名的 API。这是正常的安全限制，但会影响本地开发或直接调用第三方 API。
+          </p>
+        </div>
+
+        <div>
+          <h4 class="font-medium text-gray-900 dark:text-white mb-2">🔧 解决方案</h4>
+
+          <div class="space-y-3">
+            <div class="bg-gray-50 dark:bg-dark-700 rounded-lg p-3">
+              <h5 class="font-medium mb-1">方案 1：使用浏览器扩展（推荐，最简单）</h5>
+              <ul class="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-1">
+                <li>Chrome 安装 <a href="https://chrome.google.com/webstore/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf" target="_blank" class="text-primary-600 hover:underline">Allow CORS</a> 扩展</li>
+                <li>或安装 <a href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank" class="text-primary-600 hover:underline">CORS Unblock</a></li>
+                <li>启用扩展后刷新页面即可</li>
+              </ul>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-dark-700 rounded-lg p-3">
+              <h5 class="font-medium mb-1">方案 2：配置代理服务器</h5>
+              <p class="text-gray-600 dark:text-gray-400 mb-2">
+                在上方"代理地址"中填写你的代理服务器地址。代理服务器示例：
+              </p>
+              <pre class="bg-gray-100 dark:bg-dark-800 p-2 rounded text-xs overflow-x-auto">// Node.js 代理示例
+const express = require('express');
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
+app.use('/api', createProxyMiddleware({
+  target: 'https://api.openai.com',
+  changeOrigin: true,
+  pathRewrite: { '^/api': '' },
+}));
+</pre>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-dark-700 rounded-lg p-3">
+              <h5 class="font-medium mb-1">方案 3：使用服务商的 Web 代理</h5>
+              <p class="text-gray-600 dark:text-gray-400">
+                部分 API 服务商提供官方 Web 代理或支持配置域名白名单，请在服务商控制台查看相关设置。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <button class="btn-primary" @click="showCORSHelp = false">知道了</button>
+      </template>
+    </Modal>
+
     <!-- 关于 -->
     <section class="settings-section">
       <h2 class="section-title">关于</h2>
@@ -221,10 +295,12 @@
 import { reactive, ref } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useSettingsStore } from '@/stores/settings'
+import Modal from '@/components/common/Modal.vue'
 import type { AIModelConfig } from '@/types'
 
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
+const showCORSHelp = ref(false)
 
 const themes = [
   { value: 'light' as const, label: '浅色' },
@@ -245,6 +321,7 @@ function addConfig() {
     maxTokens: 4096,
     topP: 1,
     enabled: true,
+    proxyURL: '',
   })
 }
 

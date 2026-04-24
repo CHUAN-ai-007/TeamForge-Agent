@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { AIModelConfig } from '@/types'
 import { DEFAULT_MODEL_CONFIG } from '@/types'
+import { buildRequestURL, buildRequestHeaders, isCORSError, getCORSSolutions } from '@/utils/proxy'
 
 const STORAGE_KEY = 'teamforge:settings'
 
@@ -121,15 +122,13 @@ export const useSettingsStore = defineStore('settings', () => {
    */
   async function testConfig(config: AIModelConfig): Promise<{ success: boolean; message: string }> {
     try {
-      // 处理 baseURL，移除末尾的斜杠避免双斜杠
-      const baseURL = config.baseURL.replace(/\/$/, '')
+      const url = buildRequestURL(config)
+      const headers = buildRequestHeaders(config)
+
       // 使用简单的 chat completion 请求测试，而非 /models（兼容性更好）
-      const response = await fetch(`${baseURL}/chat/completions`, {
+      const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${config.apiKey}`,
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           model: config.model,
           messages: [{ role: 'user', content: 'Hello' }],
@@ -146,10 +145,10 @@ export const useSettingsStore = defineStore('settings', () => {
       }
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : String(e)
-      if (errorMsg.includes('Failed to fetch')) {
+      if (isCORSError(e instanceof Error ? e : new Error(errorMsg))) {
         return {
           success: false,
-          message: '连接失败: 无法访问 API 服务器。可能原因：\n1. 接口地址错误或服务器无响应\n2. 浏览器 CORS 跨域限制（尝试使用浏览器扩展解决）\n3. 网络连接问题'
+          message: `CORS 跨域错误\n\n${getCORSSolutions()}`
         }
       }
       return { success: false, message: `请求错误: ${errorMsg}` }
