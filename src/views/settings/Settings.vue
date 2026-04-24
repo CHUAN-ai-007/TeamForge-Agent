@@ -109,13 +109,26 @@
             <!-- 模型名称 -->
             <div class="form-group">
               <label class="form-label">模型名称 <span class="text-red-500">*</span></label>
-              <input
-                v-model="config.model"
-                type="text"
-                class="input"
-                placeholder="gpt-4o"
-              >
-              <p class="form-hint">例如：gpt-4o、gpt-3.5-turbo、claude-3-opus 等</p>
+              <select v-model="config.model" class="input">
+                <optgroup label="Kimi (Moonshot)">
+                  <option value="moonshot-v1-8k">moonshot-v1-8k</option>
+                  <option value="moonshot-v1-32k">moonshot-v1-32k</option>
+                  <option value="moonshot-v1-128k">moonshot-v1-128k</option>
+                </optgroup>
+                <optgroup label="GPT (OpenAI)">
+                  <option value="gpt-4o">gpt-4o</option>
+                  <option value="gpt-4o-mini">gpt-4o-mini</option>
+                  <option value="gpt-4-turbo">gpt-4-turbo</option>
+                  <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                </optgroup>
+                <optgroup label="Qwen (通义千问)">
+                  <option value="qwen-turbo">qwen-turbo</option>
+                  <option value="qwen-plus">qwen-plus</option>
+                  <option value="qwen-max">qwen-max</option>
+                  <option value="qwen-long">qwen-long</option>
+                </optgroup>
+              </select>
+              <p class="form-hint">选择要使用的 AI 模型</p>
             </div>
 
             <!-- 高级参数 -->

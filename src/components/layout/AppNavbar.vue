@@ -43,32 +43,20 @@
           </svg>
         </button>
 
-        <!-- 新建团队按钮 -->
-        <button class="btn-primary text-sm" @click="showCreateModal = true">
-          <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          新建团队
-        </button>
       </div>
     </div>
-
-    <!-- 新建团队弹窗 -->
-    <CreateTeamModal v-model="showCreateModal" />
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, h } from 'vue'
+import { h } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useSettingsStore } from '@/stores/settings'
-import CreateTeamModal from '@/components/teams/CreateTeamModal.vue'
 
 const route = useRoute()
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
-const showCreateModal = ref(false)
 
 // 导航配置
 const navItems = [
