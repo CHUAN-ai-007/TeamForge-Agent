@@ -43,7 +43,7 @@ const routes: RouteRecordRaw[] = [
     name: 'TeamDetail',
     component: TeamDetail,
     meta: { title: '团队详情' },
-    beforeEnter: (to, from, next) => {
+    beforeEnter: (to, _from, next) => {
       try {
         const teamsStore = useTeamsStore()
         const teamId = to.params.id as string
@@ -105,7 +105,7 @@ router.onError((error) => {
 })
 
 // 更新页面标题
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const title = to.meta.title as string
   if (title) {
     document.title = `${title} - TeamForge Agent`

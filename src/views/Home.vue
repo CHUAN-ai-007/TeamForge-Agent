@@ -53,33 +53,22 @@
       </div>
     </div>
 
-    <!-- 团队列表 -->
+    <!-- 团队组织架构脑图 -->
     <section class="teams-section">
       <div class="section-header">
         <h2 class="section-title">我的团队</h2>
-        <span v-if="teamsStore.teams.length > 0" class="section-count">共 {{ teamsStore.teams.length }} 个</span>
-      </div>
-
-      <div v-if="teamsStore.teams.length > 0" class="teams-grid">
-        <TeamCard
-          v-for="team in teamsStore.teams"
-          :key="team.info.id"
-          :team="team.info"
-        />
-      </div>
-
-      <!-- 空状态 -->
-      <div v-else class="empty-state">
-        <div class="empty-icon">
-          <svg class="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
+        <div class="flex items-center gap-4">
+          <span v-if="teamsStore.teams.length > 0" class="section-count">
+            共 {{ teamsStore.teams.length }} 个团队
+          </span>
+          <router-link to="/teams" class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400">
+            查看列表 →
+          </router-link>
         </div>
-        <h3 class="empty-title">还没有团队</h3>
-        <p class="empty-desc">创建您的第一个 AI Agent 团队，开始智能化协作</p>
-        <button class="btn-primary" @click="showCreateModal = true">
-          立即创建
-        </button>
+      </div>
+
+      <div class="mindmap-card card">
+        <OrgMindMap :teams="teamsStore.teams" />
       </div>
     </section>
 
@@ -92,7 +81,7 @@
 import { ref } from 'vue'
 import { useTeamsStore } from '@/stores/teams'
 import { useChatStore } from '@/stores/chat'
-import TeamCard from '@/components/teams/TeamCard.vue'
+import OrgMindMap from '@/components/teams/OrgMindMap.vue'
 import CreateTeamModal from '@/components/teams/CreateTeamModal.vue'
 
 const teamsStore = useTeamsStore()
@@ -162,8 +151,8 @@ const showCreateModal = ref(false)
   @apply text-sm text-gray-500 dark:text-gray-400;
 }
 
-.teams-grid {
-  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+.mindmap-card {
+  @apply p-6;
 }
 
 .empty-state {

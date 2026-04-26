@@ -67,6 +67,7 @@ export interface Agent {
   id: string
   teamId: string
   orgUnitId: string | null
+  sortOrder: number
   meta: AgentMeta
   persona: AgentPersona
   work: AgentWork

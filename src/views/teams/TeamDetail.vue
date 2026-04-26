@@ -279,10 +279,10 @@ watch(currentAgents, (agents) => {
 
 function handleDragEnd() {
   if (!team.value) return
-  // 只更新当前组织内的排序
-  const currentOrgId = teamsStore.currentOrgUnitId
-  const otherAgents = team.value.agents.filter(a => a.orgUnitId !== currentOrgId)
-  team.value.agents = [...otherAgents, ...sortedAgents.value]
+  // 更新当前组织内所有 agent 的 sortOrder
+  sortedAgents.value.forEach((agent, index) => {
+    agent.sortOrder = index
+  })
   teamsStore.saveToStorage()
   appStore.showToast('排序已保存', 'success')
 }
@@ -361,6 +361,7 @@ function handleAddAgent() {
     id: agentId,
     teamId: team.value.info.id,
     orgUnitId: newAgentForm.value.orgUnitId || teamsStore.currentOrgUnitId,
+    sortOrder: 0,
     meta: {
       id: agentId,
       name: newAgentForm.value.name,

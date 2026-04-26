@@ -8,7 +8,10 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         </div>
-        <span class="logo-text">TeamForge</span>
+        <div class="logo-brand">
+          <span class="logo-text">TeamForge</span>
+          <span class="logo-version">V {{ appVersion }}</span>
+        </div>
       </router-link>
 
       <!-- 主导航 -->
@@ -54,9 +57,12 @@ import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useSettingsStore } from '@/stores/settings'
 
+declare const __APP_VERSION__: string
+
 const route = useRoute()
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
+const appVersion = __APP_VERSION__
 
 // 导航配置
 const navItems = [
@@ -123,8 +129,16 @@ function toggleTheme() {
   @apply w-9 h-9 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg flex items-center justify-center text-white;
 }
 
+.logo-brand {
+  @apply hidden sm:flex items-baseline gap-1;
+}
+
 .logo-text {
-  @apply text-xl font-bold text-gray-900 dark:text-white hidden sm:block;
+  @apply text-xl font-bold text-gray-900 dark:text-white;
+}
+
+.logo-version {
+  @apply text-xs font-medium text-gray-400 dark:text-gray-500;
 }
 
 .main-nav {

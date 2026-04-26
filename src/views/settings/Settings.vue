@@ -181,13 +181,13 @@
                 <span v-else>测试连接</span>
               </button>
 
-              <span
+              <div
                 v-if="testResults[config.id]"
                 class="text-sm"
                 :class="testResults[config.id].success ? 'text-green-500' : 'text-red-500'"
               >
-                {{ testResults[config.id].message }}
-              </span>
+                <pre class="whitespace-pre-wrap font-sans">{{ testResults[config.id].message }}</pre>
+              </div>
             </div>
           </div>
         </div>
@@ -205,7 +205,7 @@
             </div>
             <div>
               <h3 class="font-semibold text-lg">TeamForge Agent</h3>
-              <p class="text-gray-500">版本 1.0.0</p>
+              <p class="text-gray-500">版本 {{ appVersion }}</p>
             </div>
           </div>
           <p class="text-gray-600 dark:text-gray-400">
@@ -223,8 +223,12 @@ import { useAppStore } from '@/stores/app'
 import { useSettingsStore } from '@/stores/settings'
 import type { AIModelConfig } from '@/types'
 
+// 声明全局版本变量
+declare const __APP_VERSION__: string
+
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
+const appVersion = __APP_VERSION__
 
 const themes = [
   { value: 'light' as const, label: '浅色' },
@@ -252,10 +256,6 @@ function deleteConfig(id: string) {
   if (confirm('确定要删除这个配置吗？')) {
     settingsStore.deleteConfig(id)
   }
-}
-
-function saveConfig() {
-  settingsStore.saveToStorage()
 }
 
 function saveConfigWithNotify(config: AIModelConfig) {

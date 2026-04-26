@@ -98,6 +98,7 @@ export async function generateAgent(
     id: agentId,
     teamId,
     orgUnitId: null,
+    sortOrder: 0,
     meta,
     persona,
     work,

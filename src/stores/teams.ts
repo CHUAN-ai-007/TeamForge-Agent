@@ -87,7 +87,7 @@ export const useTeamsStore = defineStore('teams', () => {
     if (!currentTeam.value || !currentOrgUnitId.value) return []
     return currentTeam.value.agents
       .filter(a => a.orgUnitId === currentOrgUnitId.value)
-      .sort((a, b) => a.meta.name.localeCompare(b.meta.name))
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
   })
 
   /**
@@ -109,7 +109,34 @@ export const useTeamsStore = defineStore('teams', () => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
-        return JSON.parse(stored)
+        const teams = JSON.parse(stored) as Team[]
+        // 数据兼容性处理：为旧数据添加 orgStructure
+        teams.forEach(team => {
+          if (!team.orgStructure || team.orgStructure.length === 0) {
+            team.orgStructure = createDefaultOrgStructure(team.info.name)
+          }
+          // 确保所有 agents 都有 orgUnitId 和 sortOrder
+          const orgAgentMap = new Map<string, Agent[]>()
+          team.agents.forEach(agent => {
+            if (!agent.orgUnitId) {
+              agent.orgUnitId = team.orgStructure[0]?.id || null
+            }
+            const orgId = agent.orgUnitId || 'default'
+            if (!orgAgentMap.has(orgId)) {
+              orgAgentMap.set(orgId, [])
+            }
+            orgAgentMap.get(orgId)!.push(agent)
+          })
+          // 为每个组织内的 agent 分配 sortOrder
+          orgAgentMap.forEach((agents) => {
+            agents.forEach((agent, index) => {
+              if (agent.sortOrder === undefined) {
+                agent.sortOrder = index
+              }
+            })
+          })
+        })
+        return teams
       }
     } catch (e) {
       console.error('Failed to load teams:', e)
@@ -364,6 +391,11 @@ export const useTeamsStore = defineStore('teams', () => {
           agent.orgUnitId = rootOrg.id
         }
       }
+      // 设置默认 sortOrder 为当前组织内最大排序 + 1
+      const orgAgents = team.agents.filter(a => a.orgUnitId === agent.orgUnitId)
+      agent.sortOrder = orgAgents.length > 0
+        ? Math.max(...orgAgents.map(a => a.sortOrder || 0)) + 1
+        : 0
       team.agents.push(agent)
       team.info.agentCount = team.agents.length
       team.info.updatedAt = new Date().toISOString()
@@ -380,10 +412,15 @@ export const useTeamsStore = defineStore('teams', () => {
     const team = teams.value.find(t => t.info.id === teamId)
     if (team) {
       const rootOrg = team.orgStructure.find(u => u.parentId === null)
-      agents.forEach(agent => {
+      agents.forEach((agent, index) => {
         if (!agent.orgUnitId && rootOrg) {
           agent.orgUnitId = rootOrg.id
         }
+        // 设置 sortOrder
+        const orgAgents = team.agents.filter(a => a.orgUnitId === agent.orgUnitId)
+        agent.sortOrder = orgAgents.length > 0
+          ? Math.max(...orgAgents.map(a => a.sortOrder || 0)) + 1 + index
+          : index
       })
       team.agents.push(...agents)
       team.info.agentCount = team.agents.length

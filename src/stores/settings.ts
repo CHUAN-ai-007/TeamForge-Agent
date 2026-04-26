@@ -176,12 +176,17 @@ export const useSettingsStore = defineStore('settings', () => {
     console.log('[TestConfig] Model:', config.model)
 
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30秒超时
+
       const response = await fetch(url, {
         method: 'POST',
         headers,
         body,
+        signal: controller.signal,
       })
 
+      clearTimeout(timeoutId)
       console.log('[TestConfig] Response status:', response.status)
 
       if (response.ok) {
@@ -195,6 +200,18 @@ export const useSettingsStore = defineStore('settings', () => {
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : String(e)
       console.error('[TestConfig] Fetch Error:', errorMsg)
+
+      // 提供更友好的错误提示
+      if (errorMsg.includes('fetch failed') || errorMsg.includes('ECONNREFUSED') || errorMsg.includes('ETIMEDOUT')) {
+        return {
+          success: false,
+          message: '连接失败: 无法连接到 API 服务器。可能原因：\n1. 网络连接问题\n2. 需要使用代理（如在国内访问 OpenAI）\n3. 接口地址错误'
+        }
+      }
+      if (errorMsg.includes('aborted')) {
+        return { success: false, message: '连接超时: 请求超过 30 秒未响应' }
+      }
+
       return { success: false, message: `请求错误: ${errorMsg}` }
     }
   }
