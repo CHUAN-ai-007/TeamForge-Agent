@@ -137,6 +137,7 @@
                   :is-leader="index === 0"
                   :draggable="true"
                   class="agent-item"
+                  @chat="handleAgentChat"
                 />
               </template>
             </draggable>
@@ -215,6 +216,9 @@
         <button class="btn-primary" :disabled="!isFormValid" @click="handleAddAgent">确认添加</button>
       </template>
     </Modal>
+
+    <!-- Agent 对话弹窗 -->
+    <AgentChatModal v-model="showChatModal" :agent="chatAgent" />
   </div>
 </template>
 
@@ -226,6 +230,7 @@ import { useAppStore } from '@/stores/app'
 import draggable from 'vuedraggable'
 import OrgTree from '@/components/teams/OrgTree.vue'
 import AgentCard from '@/components/agents/AgentCard.vue'
+import AgentChatModal from '@/components/agents/AgentChatModal.vue'
 import Modal from '@/components/common/Modal.vue'
 import { formatDate } from '@/utils'
 import type { Agent, OrgUnit } from '@/types'
@@ -250,12 +255,11 @@ const childOrgs = computed(() => {
 const currentAgents = computed(() => {
   if (!team.value) return []
   const currentOrgId = teamsStore.currentOrgUnitId
-  if (!currentOrgId) {
-    return team.value.agents
-  }
-  return team.value.agents
-    .filter(a => a.orgUnitId === currentOrgId)
-    .sort((a, b) => a.meta.name.localeCompare(b.meta.name))
+  const agents = currentOrgId
+    ? team.value.agents.filter(a => a.orgUnitId === currentOrgId)
+    : team.value.agents
+  // 按 sortOrder 排序，拖拽后的顺序会被保留
+  return agents.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
 })
 
 // 面包屑路径
@@ -406,6 +410,15 @@ function handleAddAgent() {
     tags: '',
   }
   showAddAgentModal.value = false
+}
+
+// Agent 对话
+const chatAgent = ref<Agent | null>(null)
+const showChatModal = ref(false)
+
+function handleAgentChat(agent: Agent) {
+  chatAgent.value = agent
+  showChatModal.value = true
 }
 </script>
 

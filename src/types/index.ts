@@ -63,6 +63,38 @@ export interface AgentWork {
   kpis: string[]
 }
 
+// ============ 知识库类型定义 ============
+
+export type KnowledgeDocType = 'file' | 'text'
+
+export interface KnowledgeDoc {
+  id: string
+  agentId: string
+  teamId: string
+  type: KnowledgeDocType
+  title: string
+  content: string // 文档内容或文本内容
+  fileName?: string // 如果是文件上传，保存原始文件名
+  fileSize?: number // 文件大小（字节）
+  chunkCount: number // 文档分块数量
+  createdAt: string
+  updatedAt: string
+}
+
+export interface KnowledgeChunk {
+  id: string
+  docId: string
+  agentId: string
+  content: string // 知识片段内容
+  embedding?: number[] // 向量嵌入（可选，用于高级RAG）
+  metadata: {
+    startIndex: number // 在原文档中的起始位置
+    endIndex: number // 在原文档中的结束位置
+    title?: string // 来源文档标题
+  }
+  createdAt: string
+}
+
 export interface Agent {
   id: string
   teamId: string
@@ -75,6 +107,15 @@ export interface Agent {
   metaContent: string
   personaContent: string
   workContent: string
+  // 知识库
+  knowledgeBase?: KnowledgeDoc[]
+  // RAG设置
+  ragSettings?: {
+    enabled: boolean // 是否启用RAG
+    topK: number // 检索 top K 个相关知识片段
+    similarityThreshold: number // 相似度阈值（0-1）
+    maxContextLength: number // 最大上下文长度
+  }
 }
 
 // ============ 组织单元类型定义 ============
@@ -127,6 +168,7 @@ export interface ChatMessage {
 export interface ChatSession {
   id: string
   teamId: string
+  agentId?: string // 如果指定，表示与单个Agent的对话；否则是团队群聊
   messages: ChatMessage[]
   createdAt: string
   updatedAt: string
@@ -150,6 +192,14 @@ export interface AppState {
   currentTeamId: string | null
   currentAgentId: string | null
   currentChatId: string | null
+}
+
+// RAG 默认设置
+export const DEFAULT_RAG_SETTINGS = {
+  enabled: true,
+  topK: 3,
+  similarityThreshold: 0.7,
+  maxContextLength: 2000,
 }
 
 // ============ API 响应类型 ============

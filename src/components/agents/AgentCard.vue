@@ -7,6 +7,14 @@
       </svg>
     </div>
 
+    <!-- 对话按钮 -->
+    <button class="chat-btn" title="开始对话" @click.prevent="handleChat">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+      对话
+    </button>
+
     <!-- 负责人角标 - 卡片左上角 -->
     <div v-if="isLeader" class="leader-badge">
       <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -44,10 +52,18 @@ interface Props {
   draggable?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   isLeader: false,
   draggable: false,
 })
+
+const emit = defineEmits<{
+  chat: [agent: Agent]
+}>()
+
+function handleChat() {
+  emit('chat', props.agent)
+}
 
 const levelText = {
   junior: '初级',
@@ -76,6 +92,12 @@ const levelText = {
 
 .drag-handle:active {
   @apply cursor-grabbing;
+}
+
+.chat-btn {
+  @apply flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary-600 hover:text-primary-700
+         hover:bg-primary-50 dark:text-primary-400 dark:hover:text-primary-300 dark:hover:bg-primary-900/20
+         rounded-lg transition-colors mr-2;
 }
 
 .agent-card {

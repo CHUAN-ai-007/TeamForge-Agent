@@ -61,11 +61,12 @@ export const useChatStore = defineStore('chat', () => {
   /**
    * 创建新会话
    */
-  function createSession(teamId: string): ChatSession {
+  function createSession(teamId: string, agentId?: string): ChatSession {
     const now = new Date().toISOString()
     const newSession: ChatSession = {
       id: `chat_${Date.now()}`,
       teamId,
+      agentId,
       messages: [],
       createdAt: now,
       updatedAt: now,
@@ -80,12 +81,24 @@ export const useChatStore = defineStore('chat', () => {
    * 获取或创建团队会话
    */
   function getOrCreateSession(teamId: string): ChatSession {
-    const existing = sessions.value.find(s => s.teamId === teamId)
+    const existing = sessions.value.find(s => s.teamId === teamId && !s.agentId)
     if (existing) {
       currentSessionId.value = existing.id
       return existing
     }
     return createSession(teamId)
+  }
+
+  /**
+   * 获取或创建与单个Agent的会话
+   */
+  function getOrCreateAgentSession(teamId: string, agentId: string): ChatSession {
+    const existing = sessions.value.find(s => s.teamId === teamId && s.agentId === agentId)
+    if (existing) {
+      currentSessionId.value = existing.id
+      return existing
+    }
+    return createSession(teamId, agentId)
   }
 
   /**
@@ -195,6 +208,7 @@ export const useChatStore = defineStore('chat', () => {
     // Actions
     createSession,
     getOrCreateSession,
+    getOrCreateAgentSession,
     setCurrentSession,
     addMessage,
     updateMessage,

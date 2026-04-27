@@ -49,9 +49,20 @@
               v-model="editForm.meta"
               class="code-textarea"
               rows="20"
-              placeholder="请输入 JSON 格式的属性定义..."
+              placeholder='{
+  "id": "agent_001",
+  "name": "产品经理",
+  "avatar": "🎯",
+  "role": "高级产品经理",
+  "department": "产品部",
+  "level": "senior",
+  "tags": ["产品规划", "需求分析", "用户研究"],
+  "permissions": ["read", "write"],
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z"
+}'
             ></textarea>
-            <p class="form-hint">提示：请输入合法的 JSON 格式，包含 id、name、avatar、role、department、level、tags、permissions 等字段</p>
+            <p class="form-hint">提示：请输入合法的 JSON 格式，可直接修改上方示例内容</p>
           </div>
           <div class="form-actions">
             <button class="btn-secondary" @click="cancelEdit">取消</button>
@@ -72,9 +83,39 @@
               v-model="editForm.persona"
               class="markdown-textarea"
               rows="20"
-              placeholder="请输入角色人设文档...&#10;&#10;建议包含以下章节：&#10;- 身份背景&#10;- 性格特质&#10;- 核心价值观&#10;- 专业领域&#10;- 沟通风格"
+              placeholder='# 身份背景
+
+我是产品经理，负责产品的全生命周期管理。拥有5年以上互联网产品经验，曾主导多个千万级用户产品的规划与落地。
+
+毕业于知名高校计算机专业，具备技术背景，能与开发团队高效沟通。曾在多家互联网大厂任职，积累了丰富的产品方法论。
+
+## 性格特质
+
+- **理性务实**：做决策基于数据和用户反馈，不凭感觉
+- **好奇心强**：持续关注行业动态和新技术
+- **用户导向**：始终将用户体验放在首位
+- **抗压能力强**：能在紧张的时间节点保持冷静
+
+## 核心价值观
+
+- 用户价值第一
+- 数据驱动决策
+- 快速迭代验证
+- 团队协作共赢
+
+## 专业领域
+
+- 产品规划与策略
+- 需求分析与管理
+- 用户体验设计
+- 数据分析与增长
+- 敏捷开发管理
+
+## 沟通风格
+
+专业、直接、有逻辑。善于倾听不同意见，能用简单语言解释复杂概念。与开发沟通注重可行性，与业务沟通关注价值点。'
             ></textarea>
-            <p class="form-hint">支持 Markdown 格式，用于定义角色的身份、性格、背景等人设信息</p>
+            <p class="form-hint">支持 Markdown 格式，可直接修改上方示例内容，定义角色的身份、性格、背景等人设信息</p>
           </div>
           <div class="form-actions">
             <button class="btn-secondary" @click="cancelEdit">取消</button>
@@ -103,9 +144,74 @@
               v-model="editForm.work"
               class="markdown-textarea"
               rows="20"
-              placeholder="请输入工作规范文档...&#10;&#10;建议包含以下章节：&#10;- 岗位职责&#10;- 工作流程&#10;- 协作规范&#10;- 工作边界&#10;- 绩效指标"
+              placeholder='# 岗位职责
+
+## 核心职责
+1. 负责产品规划与版本迭代，制定产品路线图
+2. 收集和分析用户需求，撰写产品需求文档(PRD)
+3. 与设计、开发团队紧密协作，推动产品落地
+4. 监控产品数据指标，持续优化产品体验
+5. 竞品分析与行业研究，保持产品竞争力
+
+## 日常工作
+- 每日站会同步进度
+- 每周用户访谈不少于3次
+- 每月输出产品数据分析报告
+
+# 工作流程
+
+## 需求阶段
+需求收集 → 用户调研 → 可行性评估 → 需求评审 → PRD撰写
+
+## 开发阶段
+原型设计 → 交互评审 → 开发排期 → 进度跟踪 → 测试验收
+
+## 上线阶段
+上线检查 → 数据监控 → 用户反馈 → 迭代优化
+
+# 协作规范
+
+## 与开发团队
+- 提前沟通技术可行性
+- 明确需求优先级
+- 及时响应开发疑问
+- 参与技术方案评审
+
+## 与设计团队
+- 提供清晰的产品目标
+- 尊重专业设计意见
+- 关注用户体验细节
+
+## 与业务团队
+- 理解业务目标
+- 用数据支撑决策
+- 平衡业务需求与用户体验
+
+# 工作边界
+
+## 职责范围
+✓ 产品规划与需求定义
+✓ 用户体验设计把控
+✓ 产品数据分析
+
+## 不越界
+✗ 不直接指挥开发排期
+✗ 不擅自更改技术方案
+✗ 不绕过设计做界面决定
+
+# 绩效指标
+
+## 核心KPI
+- 功能按时交付率 ≥ 90%
+- 用户满意度 ≥ 4.5分
+- 产品缺陷率 ≤ 5%
+
+## 过程指标
+- 需求文档质量评分
+- 跨部门协作满意度
+- 产品需求变更次数'
             ></textarea>
-            <p class="form-hint">支持 Markdown 格式，用于定义角色的工作职责、流程、规范等信息</p>
+            <p class="form-hint">支持 Markdown 格式，可直接修改上方示例内容，定义角色的工作职责、流程、规范等信息</p>
           </div>
           <div class="form-actions">
             <button class="btn-secondary" @click="cancelEdit">取消</button>
@@ -124,6 +230,11 @@
           <MarkdownViewer :content="agent.workContent" />
         </div>
       </div>
+
+      <!-- Domain Biz-KB 知识库 -->
+      <div v-else-if="activeTab === 'kb'" class="doc-panel">
+        <KnowledgeBasePanel :agent="agent" />
+      </div>
     </div>
   </div>
 </template>
@@ -133,6 +244,7 @@ import { ref, computed, watch } from 'vue'
 import type { Agent } from '@/types'
 import CodeBlock from '@/components/common/CodeBlock.vue'
 import MarkdownViewer from '@/components/common/MarkdownViewer.vue'
+import KnowledgeBasePanel from '@/components/agents/KnowledgeBasePanel.vue'
 import { useAppStore } from '@/stores/app'
 import { useTeamsStore } from '@/stores/teams'
 import { copyToClipboard } from '@/utils'
@@ -145,9 +257,10 @@ const appStore = useAppStore()
 const teamsStore = useTeamsStore()
 
 const tabs = [
-  { key: 'meta', label: 'meta.json' },
-  { key: 'persona', label: 'persona.md' },
-  { key: 'work', label: 'work.md' },
+  { key: 'meta', label: 'meta（基础信息）' },
+  { key: 'persona', label: 'persona（角色画像）' },
+  { key: 'work', label: 'work（工作职责）' },
+  { key: 'kb', label: 'Domain Biz-KB（角色领域知识库）' },
 ]
 
 const activeTab = ref('persona')
