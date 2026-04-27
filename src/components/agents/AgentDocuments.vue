@@ -60,9 +60,28 @@
   "permissions": ["read", "write"],
   "createdAt": "2024-01-01T00:00:00.000Z",
   "updatedAt": "2024-01-01T00:00:00.000Z"
+}
+
+// HRBP 示例：
+{
+  "name": "佳秀（示例）",
+  "slug": "example_jiaxiu",
+  "profile": {
+    "company": "AI Lab",
+    "level": "None",
+    "role": "HRBP",
+    "department": "AI Lab",
+    "gender": "女",
+    "mbti": "ENFJ"
+  },
+  "tags": {
+    "personality": ["认真负责", "热情", "爱聊天", "星座达人", "综艺迷"],
+    "culture": ["氛围组", "靠谱BP"]
+  },
+  "impression": "招聘靠谱效率高，闲下来能跟你从星座聊到塔罗再聊到新说唱，团队里的快乐源泉"
 }'
             ></textarea>
-            <p class="form-hint">提示：请输入合法的 JSON 格式，可直接修改上方示例内容</p>
+            <p class="form-hint">提示：请输入合法的 JSON 格式，可直接修改上方示例内容（包含产品经理和HRBP示例）</p>
           </div>
           <div class="form-actions">
             <button class="btn-secondary" @click="cancelEdit">取消</button>

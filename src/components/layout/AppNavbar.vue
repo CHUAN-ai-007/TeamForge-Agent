@@ -114,7 +114,7 @@ function toggleTheme() {
 
 <style scoped>
 .navbar {
-  @apply fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-dark-800/80 backdrop-blur-lg border-b border-gray-200 dark:border-dark-700;
+  @apply fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl border-b border-navy-200 dark:border-navy-800;
 }
 
 .navbar-container {
@@ -122,23 +122,23 @@ function toggleTheme() {
 }
 
 .logo {
-  @apply flex items-center gap-2 flex-shrink-0;
+  @apply flex items-center gap-3 flex-shrink-0;
 }
 
 .logo-icon {
-  @apply w-9 h-9 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg flex items-center justify-center text-white;
+  @apply w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-500 rounded-xl flex items-center justify-center text-white shadow-quantplay;
 }
 
 .logo-brand {
-  @apply hidden sm:flex items-baseline gap-1;
+  @apply hidden sm:flex items-baseline gap-2;
 }
 
 .logo-text {
-  @apply text-xl font-bold text-gray-900 dark:text-white;
+  @apply text-xl font-bold bg-gradient-to-r from-navy-900 to-navy-700 dark:from-white dark:to-navy-200 bg-clip-text text-transparent;
 }
 
 .logo-version {
-  @apply text-xs font-medium text-gray-400 dark:text-gray-500;
+  @apply text-xs font-semibold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full;
 }
 
 .main-nav {
@@ -146,11 +146,16 @@ function toggleTheme() {
 }
 
 .nav-item {
-  @apply flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-white transition-all duration-200 text-sm font-medium;
+  @apply relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-navy-600 dark:text-navy-300 hover:bg-navy-100 dark:hover:bg-navy-800 hover:text-navy-900 dark:hover:text-white transition-all duration-200 text-sm font-medium;
 }
 
 .nav-item.active {
   @apply bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400;
+}
+
+.nav-item.active::before {
+  content: '';
+  @apply absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-500 rounded-r-full;
 }
 
 .nav-icon {
@@ -162,19 +167,19 @@ function toggleTheme() {
 }
 
 .status-badge {
-  @apply hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium;
+  @apply hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border;
 }
 
 .status-ok {
-  @apply bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400;
+  @apply bg-success-50 dark:bg-success-500/10 border-success-200 dark:border-success-500/20 text-success-600 dark:text-success-400;
 }
 
 .status-error {
-  @apply bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400;
+  @apply bg-danger-50 dark:bg-danger-500/10 border-danger-200 dark:border-danger-500/20 text-danger-600 dark:text-danger-400;
 }
 
 .status-dot {
-  @apply w-1.5 h-1.5 rounded-full bg-current;
+  @apply w-2 h-2 rounded-full bg-current animate-pulse;
 }
 
 .status-text {
@@ -182,11 +187,11 @@ function toggleTheme() {
 }
 
 .theme-btn {
-  @apply p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-white transition-colors;
+  @apply p-2.5 rounded-xl text-navy-500 dark:text-navy-400 hover:bg-navy-100 dark:hover:bg-navy-800 hover:text-navy-900 dark:hover:text-white transition-all duration-200;
 }
 
 /* 移动端菜单按钮 */
 .mobile-menu-btn {
-  @apply md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-700;
+  @apply md:hidden p-2.5 rounded-xl text-navy-600 hover:bg-navy-100 dark:hover:bg-navy-800;
 }
 </style>

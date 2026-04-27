@@ -1,10 +1,10 @@
 <template>
   <div class="org-tree">
     <div class="org-tree-header">
-      <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">组织架构</h3>
+      <h3 class="text-sm font-bold text-navy-700 dark:text-navy-300">组织架构</h3>
       <button
         v-if="currentTeamId"
-        class="btn-icon text-xs"
+        class="btn-icon"
         @click="showAddModal = true"
         title="添加组织"
       >
@@ -50,7 +50,7 @@
         </div>
         <div v-if="parentNodeName" class="form-group">
           <label class="form-label">上级组织</label>
-          <input :value="parentNodeName" type="text" class="input bg-gray-100 dark:bg-dark-700" disabled>
+          <input :value="parentNodeName" type="text" class="input bg-navy-100 dark:bg-navy-800" disabled>
         </div>
       </div>
       <template #footer>
@@ -61,7 +61,7 @@
 
     <!-- 删除确认弹窗 -->
     <Modal v-model="showDeleteModal" title="确认删除" size="sm">
-      <p class="text-gray-600 dark:text-gray-300">
+      <p class="text-navy-600 dark:text-navy-300">
         确定要删除 "{{ deleteTarget?.name }}" 吗？
       </p>
       <template #footer>
@@ -215,11 +215,11 @@ function handleSubmit() {
 
 <style scoped>
 .org-tree {
-  @apply h-full flex flex-col;
+  @apply h-full flex flex-col bg-white dark:bg-navy-900;
 }
 
 .org-tree-header {
-  @apply flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-dark-700;
+  @apply flex items-center justify-between px-4 py-3 border-b border-navy-200 dark:border-navy-800 bg-navy-50/50 dark:bg-navy-900/50;
 }
 
 .org-tree-content {
@@ -227,7 +227,7 @@ function handleSubmit() {
 }
 
 .btn-icon {
-  @apply p-1.5 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-dark-700 transition-colors;
+  @apply p-2 rounded-xl text-navy-500 hover:text-navy-700 hover:bg-navy-100 dark:text-navy-400 dark:hover:text-navy-200 dark:hover:bg-navy-800 transition-all duration-200;
 }
 
 .form-group {
@@ -235,6 +235,37 @@ function handleSubmit() {
 }
 
 .form-label {
-  @apply block text-sm font-medium text-gray-700 dark:text-gray-300;
+  @apply block text-sm font-semibold text-navy-700 dark:text-navy-300;
+}
+
+.input {
+  @apply w-full px-4 py-2.5 bg-white dark:bg-navy-800 border border-navy-200 dark:border-navy-700 rounded-xl
+         text-navy-900 dark:text-white placeholder-navy-400
+         focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500
+         transition-all duration-200;
+}
+
+.input:disabled {
+  @apply bg-navy-100 dark:bg-navy-800 text-navy-500 cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply px-5 py-2.5 text-sm font-semibold text-navy-700 dark:text-navy-300
+         bg-white dark:bg-navy-800 border border-navy-200 dark:border-navy-700
+         rounded-xl hover:bg-navy-50 dark:hover:bg-navy-700 transition-all duration-200;
+}
+
+.btn-primary {
+  @apply px-5 py-2.5 text-sm font-semibold text-white
+         bg-gradient-to-br from-primary-500 to-primary-600
+         rounded-xl hover:from-primary-600 hover:to-primary-700
+         transition-all duration-200 shadow-quantplay;
+}
+
+.btn-danger {
+  @apply px-5 py-2.5 text-sm font-semibold text-white
+         bg-gradient-to-br from-red-500 to-red-600
+         rounded-xl hover:from-red-600 hover:to-red-700
+         transition-all duration-200;
 }
 </style>

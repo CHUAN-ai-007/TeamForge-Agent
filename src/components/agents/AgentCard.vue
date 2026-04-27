@@ -7,14 +7,6 @@
       </svg>
     </div>
 
-    <!-- 对话按钮 -->
-    <button class="chat-btn" title="开始对话" @click.prevent="handleChat">
-      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-      </svg>
-      对话
-    </button>
-
     <!-- 负责人角标 - 卡片左上角 -->
     <div v-if="isLeader" class="leader-badge">
       <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -29,7 +21,7 @@
         <h4 class="agent-name">{{ agent.meta.name }}</h4>
         <p class="agent-role">{{ agent.meta.role }}</p>
         <div class="agent-tags">
-          <span v-for="tag in agent.meta.tags.slice(0, 3)" :key="tag" class="tag tag-blue">
+          <span v-for="tag in agent.meta.tags.slice(0, 3)" :key="tag" class="tag">
             {{ tag }}
           </span>
         </div>
@@ -39,6 +31,14 @@
           {{ levelText[agent.meta.level] }}
         </span>
       </div>
+
+      <!-- 对话按钮 -->
+      <button class="chat-btn" title="开始对话" @click.prevent="handleChat">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        对话
+      </button>
     </router-link>
   </div>
 </template>
@@ -79,7 +79,9 @@ const levelText = {
 }
 
 .leader-badge {
-  @apply absolute -top-1.5 left-10 flex items-center gap-0.5 px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-medium rounded-full shadow-md z-20;
+  @apply absolute -top-1.5 left-12 z-20 flex items-center gap-1 px-2 py-0.5
+         bg-gradient-to-r from-amber-500 to-orange-500
+         text-white text-[10px] font-bold rounded-full shadow-lg;
 }
 
 .leader-badge svg {
@@ -87,25 +89,27 @@ const levelText = {
 }
 
 .drag-handle {
-  @apply p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing;
+  @apply p-2 text-navy-400 hover:text-navy-600 dark:hover:text-navy-300 cursor-grab active:cursor-grabbing transition-colors;
 }
 
 .drag-handle:active {
   @apply cursor-grabbing;
 }
 
-.chat-btn {
-  @apply flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary-600 hover:text-primary-700
-         hover:bg-primary-50 dark:text-primary-400 dark:hover:text-primary-300 dark:hover:bg-primary-900/20
-         rounded-lg transition-colors mr-2;
-}
-
 .agent-card {
-  @apply flex-1 flex items-center gap-4 p-4 bg-white dark:bg-dark-800 rounded-xl border border-gray-200 dark:border-dark-700 hover:border-primary-500 dark:hover:border-primary-500 transition-all duration-200 hover:shadow-md;
+  @apply flex-1 flex items-center gap-4 p-5
+         bg-white dark:bg-navy-900
+         rounded-2xl border border-navy-200 dark:border-navy-700
+         shadow-card
+         hover:shadow-card-hover hover:border-primary-300 dark:hover:border-primary-700
+         transition-all duration-300;
 }
 
 .agent-avatar {
-  @apply w-14 h-14 text-3xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-dark-700 dark:to-dark-600 rounded-xl flex items-center justify-center flex-shrink-0;
+  @apply w-14 h-14 text-3xl
+         bg-gradient-to-br from-primary-500 to-primary-600
+         rounded-xl flex items-center justify-center flex-shrink-0
+         shadow-quantplay text-white;
 }
 
 .agent-info {
@@ -113,15 +117,22 @@ const levelText = {
 }
 
 .agent-name {
-  @apply font-semibold text-gray-900 dark:text-white truncate;
+  @apply font-bold text-navy-900 dark:text-white truncate text-lg;
 }
 
 .agent-role {
-  @apply text-sm text-gray-500 dark:text-gray-400 mt-0.5;
+  @apply text-sm text-navy-500 dark:text-navy-400 mt-0.5 font-medium;
 }
 
 .agent-tags {
   @apply flex flex-wrap gap-1.5 mt-2;
+}
+
+.tag {
+  @apply px-2 py-0.5 text-xs font-semibold rounded-full
+         bg-primary-50 dark:bg-primary-900/30
+         text-primary-600 dark:text-primary-400
+         border border-primary-100 dark:border-primary-800;
 }
 
 .agent-level {
@@ -129,22 +140,37 @@ const levelText = {
 }
 
 .level-badge {
-  @apply px-2 py-1 text-xs font-medium rounded;
+  @apply px-3 py-1 text-xs font-bold rounded-full;
 }
 
 .level-junior {
-  @apply bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400;
+  @apply bg-success-50 dark:bg-success-500/10 text-success-600 dark:text-success-400
+         border border-success-200 dark:border-success-500/20;
 }
 
 .level-senior {
-  @apply bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400;
+  @apply bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400
+         border border-primary-200 dark:border-primary-800;
 }
 
 .level-lead {
-  @apply bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400;
+  @apply bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400
+         border border-purple-200 dark:border-purple-800;
 }
 
 .level-executive {
-  @apply bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400;
+  @apply bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400
+         border border-amber-200 dark:border-amber-800;
+}
+
+.chat-btn {
+  @apply flex items-center gap-1.5 px-4 py-2 ml-2
+         text-sm font-semibold
+         bg-primary-50 dark:bg-primary-900/30
+         text-primary-600 dark:text-primary-400
+         rounded-xl
+         hover:bg-primary-100 dark:hover:bg-primary-900/50
+         hover:text-primary-700 dark:hover:text-primary-300
+         transition-all duration-200;
 }
 </style>

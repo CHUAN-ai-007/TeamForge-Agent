@@ -41,7 +41,7 @@
             v-for="message in messages"
             :key="message.id"
             class="message"
-            :class="message.role"
+            :class="{ 'user': message.role === 'user', 'agent': message.role === 'agent' }"
           >
             <div class="message-avatar">
               <template v-if="message.role === 'user'">
@@ -404,11 +404,11 @@ ${agent.work.workflow}`
 }
 
 .agent-header {
-  @apply flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-700/50;
+  @apply flex items-center gap-3 px-5 py-4 border-b border-navy-200 dark:border-navy-800 bg-navy-50/80 dark:bg-navy-900/80 backdrop-blur-sm;
 }
 
 .agent-avatar {
-  @apply w-12 h-12 text-2xl bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center;
+  @apply w-12 h-12 text-2xl bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-quantplay text-white;
 }
 
 .agent-info {
@@ -416,32 +416,32 @@ ${agent.work.workflow}`
 }
 
 .agent-name {
-  @apply font-semibold text-gray-900 dark:text-white;
+  @apply font-bold text-navy-900 dark:text-white;
 }
 
 .agent-role {
-  @apply text-sm text-gray-500 dark:text-gray-400;
+  @apply text-sm text-navy-500 dark:text-navy-400 font-medium;
 }
 
 .rag-status {
-  @apply flex items-center gap-1.5 ml-auto px-2.5 py-1 text-xs rounded-full
-         bg-gray-100 dark:bg-dark-700 text-gray-500 dark:text-gray-400;
+  @apply flex items-center gap-1.5 ml-auto px-3 py-1.5 text-xs font-semibold rounded-full
+         bg-navy-100 dark:bg-navy-800 text-navy-600 dark:text-navy-400 border border-navy-200 dark:border-navy-700;
 }
 
 .rag-status.active {
-  @apply bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400;
+  @apply bg-success-50 dark:bg-success-500/10 border-success-200 dark:border-success-500/20 text-success-600 dark:text-success-400;
 }
 
 .rag-status .kb-count {
-  @apply text-gray-400 dark:text-gray-500;
+  @apply text-navy-400 dark:text-navy-500;
 }
 
 .rag-status.active .kb-count {
-  @apply text-green-600 dark:text-green-500;
+  @apply text-success-600 dark:text-success-500;
 }
 
 .messages-container {
-  @apply flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50 dark:bg-dark-900/50;
+  @apply flex-1 overflow-y-auto p-4 space-y-4 bg-navy-50/50 dark:bg-navy-950/50;
 }
 
 .empty-chat {
@@ -453,11 +453,11 @@ ${agent.work.workflow}`
 }
 
 .empty-chat h3 {
-  @apply text-lg font-medium text-gray-900 dark:text-white mb-2;
+  @apply text-lg font-bold text-navy-900 dark:text-white mb-2;
 }
 
 .empty-chat p {
-  @apply text-sm text-gray-500 dark:text-gray-400 mb-4;
+  @apply text-sm text-navy-500 dark:text-navy-400 mb-4;
 }
 
 .quick-prompts {
@@ -465,38 +465,60 @@ ${agent.work.workflow}`
 }
 
 .quick-prompt {
-  @apply px-3 py-1.5 bg-white dark:bg-dark-700 border border-gray-200 dark:border-dark-600
-         hover:border-primary-400 dark:hover:border-primary-500
-         text-gray-600 dark:text-gray-300 text-sm rounded-lg transition-colors;
+  @apply px-4 py-2 bg-white dark:bg-navy-800 border border-navy-200 dark:border-navy-700
+         hover:border-primary-400 dark:hover:border-primary-500 hover:shadow-quantplay
+         text-navy-600 dark:text-navy-300 text-sm font-medium rounded-xl transition-all duration-200;
 }
 
 .messages-list {
-  @apply space-y-4;
+  @apply space-y-5 px-2;
 }
 
+/* 消息基础布局 */
 .message {
-  @apply flex gap-3;
+  @apply flex gap-3 w-full;
 }
 
+/* Agent 消息 - 靠左 */
+.message.agent,
+.message:not(.user) {
+  @apply justify-start;
+}
+
+/* 用户消息 - 靠右 */
 .message.user {
-  @apply flex-row-reverse;
+  @apply flex-row-reverse justify-start;
 }
 
+/* 头像样式 */
 .message-avatar {
-  @apply w-9 h-9 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-dark-700 dark:to-dark-600
-         flex items-center justify-center text-lg flex-shrink-0;
+  @apply w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0
+         bg-gradient-to-br from-navy-200 to-navy-300 dark:from-navy-700 dark:to-navy-600
+         shadow-sm;
 }
 
 .message.user .message-avatar {
-  @apply bg-gradient-to-br from-primary-500 to-purple-600;
+  @apply bg-gradient-to-br from-primary-500 to-primary-600 text-white
+         shadow-quantplay;
 }
 
+/* 消息内容容器 */
 .message-content {
-  @apply flex-1 max-w-[85%];
+  @apply max-w-[75%] flex flex-col;
 }
 
+.message.agent .message-content,
+.message:not(.user) .message-content {
+  @apply items-start;
+}
+
+.message.user .message-content {
+  @apply items-end;
+}
+
+/* 消息头部 */
 .message-header {
-  @apply flex items-center gap-2 mb-1;
+  @apply flex items-center gap-2 mb-1.5 px-1;
 }
 
 .message.user .message-header {
@@ -504,29 +526,70 @@ ${agent.work.workflow}`
 }
 
 .message-author {
-  @apply text-sm font-medium text-gray-900 dark:text-white;
+  @apply text-sm font-bold;
+}
+
+.message.agent .message-author,
+.message:not(.user) .message-author {
+  @apply text-navy-700 dark:text-navy-200;
+}
+
+.message.user .message-author {
+  @apply text-primary-600 dark:text-primary-400;
 }
 
 .message-time {
-  @apply text-xs text-gray-400;
+  @apply text-xs text-navy-400;
 }
 
-:deep(.message-content .markdown-body) {
-  @apply bg-white dark:bg-dark-800 p-3 rounded-xl rounded-tl-none
-         border border-gray-200 dark:border-dark-700 text-sm;
+/* Agent 气泡 - 白色背景，左边尖角 */
+.message.agent :deep(.markdown-body),
+.message:not(.user) :deep(.markdown-body) {
+  @apply bg-white dark:bg-navy-800
+         text-navy-800 dark:text-navy-100
+         p-4 rounded-2xl rounded-bl-none
+         border border-navy-200 dark:border-navy-700
+         text-sm shadow-card;
 }
 
+/* 用户气泡 - 渐变蓝色，右边尖角 */
 .message.user :deep(.markdown-body) {
-  @apply bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-800 rounded-tl-xl rounded-tr-none;
+  @apply bg-gradient-to-br from-primary-500 to-primary-600
+         text-white
+         p-4 rounded-2xl rounded-br-none
+         border-0
+         text-sm shadow-quantplay;
 }
 
+/* 用户气泡内链接颜色 */
+.message.user :deep(.markdown-body a) {
+  @apply text-white/90 underline hover:text-white;
+}
+
+/* 用户气泡内代码样式 */
+.message.user :deep(.markdown-body code) {
+  @apply bg-white/20 text-white;
+}
+
+/* 打字指示器 - 靠左 */
 .typing-indicator {
-  @apply flex items-center gap-1 p-3 bg-white dark:bg-dark-800 rounded-xl rounded-tl-none
-         border border-gray-200 dark:border-dark-700 w-fit;
+  @apply flex items-center gap-1.5 p-4
+         bg-white dark:bg-navy-800
+         rounded-2xl rounded-bl-none
+         border border-navy-200 dark:border-navy-700
+         w-fit shadow-card;
 }
 
 .typing-indicator span {
-  @apply w-2 h-2 bg-gray-400 rounded-full animate-bounce;
+  @apply w-2 h-2 bg-navy-400 rounded-full animate-bounce;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
 .typing-indicator span:nth-child(2) {
@@ -538,7 +601,7 @@ ${agent.work.workflow}`
 }
 
 .input-area {
-  @apply border-t border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-800 p-4;
+  @apply border-t border-navy-200 dark:border-navy-800 bg-white dark:bg-navy-900 p-4;
 }
 
 .api-notice {
@@ -546,23 +609,30 @@ ${agent.work.workflow}`
 }
 
 .api-notice a {
-  @apply text-primary-600 hover:underline;
+  @apply text-primary-600 hover:text-primary-700 font-semibold;
 }
 
 .input-container {
-  @apply flex items-end gap-2;
+  @apply flex items-end gap-3;
 }
 
 .message-input {
-  @apply flex-1 input resize-none min-h-[44px] max-h-[120px] py-3 bg-gray-100 dark:bg-dark-700 border-0;
+  @apply flex-1 resize-none min-h-[48px] max-h-[120px] py-3 px-4
+         bg-navy-50 dark:bg-navy-800 border border-navy-200 dark:border-navy-700 rounded-xl
+         text-navy-900 dark:text-white placeholder-navy-400
+         focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500
+         transition-all duration-200;
 }
 
 .send-btn {
-  @apply w-10 h-10 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed
-         text-white rounded-lg flex items-center justify-center transition-colors flex-shrink-0;
+  @apply w-11 h-11 bg-gradient-to-br from-primary-500 to-primary-600
+         hover:from-primary-600 hover:to-primary-700
+         disabled:opacity-50 disabled:cursor-not-allowed
+         text-white rounded-xl flex items-center justify-center transition-all duration-200
+         shadow-quantplay hover:shadow-quantplay-lg hover:-translate-y-0.5 flex-shrink-0;
 }
 
 .send-btn .spinner {
-  @apply w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin;
+  @apply w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin;
 }
 </style>

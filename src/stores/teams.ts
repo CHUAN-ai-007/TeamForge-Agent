@@ -261,10 +261,16 @@ export const useTeamsStore = defineStore('teams', () => {
 
     const unitIndex = team.orgStructure.findIndex(u => u.id === unitId)
     if (unitIndex > -1) {
+      const unit = team.orgStructure[unitIndex]
       team.orgStructure[unitIndex] = {
-        ...team.orgStructure[unitIndex],
+        ...unit,
         ...updates,
         updatedAt: new Date().toISOString(),
+      }
+      // 如果更新的是根组织（公司），同步更新团队名称
+      if (unit.parentId === null && updates.name) {
+        team.info.name = updates.name
+        team.info.updatedAt = new Date().toISOString()
       }
       saveToStorage()
       return true

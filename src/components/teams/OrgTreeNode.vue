@@ -145,20 +145,22 @@ function handleClick() {
 }
 
 .node-item {
-  @apply flex items-center gap-1.5 py-2 pr-2 rounded-lg cursor-pointer
-         text-sm text-gray-700 dark:text-gray-300
-         hover:bg-gray-100 dark:hover:bg-dark-700
-         transition-colors;
+  @apply flex items-center gap-2 py-2.5 pr-2 rounded-xl cursor-pointer
+         text-sm text-navy-700 dark:text-navy-300 font-medium
+         hover:bg-navy-100 dark:hover:bg-navy-800
+         transition-all duration-200;
 }
 
 .node-item.is-selected {
-  @apply bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300
-         hover:bg-primary-100 dark:hover:bg-primary-900/30;
+  @apply bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400
+         hover:bg-primary-100 dark:hover:bg-primary-900/30
+         border-l-4 border-primary-500;
 }
 
 .expand-btn {
-  @apply p-0.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300
-         transition-transform duration-200;
+  @apply p-1 rounded-lg text-navy-400 hover:text-navy-600 dark:hover:text-navy-300
+         hover:bg-navy-200 dark:hover:bg-navy-700
+         transition-all duration-200;
 }
 
 .expand-btn.is-expanded {
@@ -166,23 +168,26 @@ function handleClick() {
 }
 
 .expand-placeholder {
-  @apply w-5;
+  @apply w-6;
 }
 
 .node-icon {
-  @apply text-base;
+  @apply text-lg;
 }
 
 .node-name {
-  @apply flex-1 truncate;
+  @apply flex-1 truncate font-semibold;
 }
 
 .node-badge {
-  @apply text-xs px-1.5 py-0.5 bg-gray-200 dark:bg-dark-600 text-gray-600 dark:text-gray-400 rounded-full;
+  @apply text-xs font-bold px-2 py-0.5
+         bg-navy-100 dark:bg-navy-700
+         text-navy-600 dark:text-navy-300
+         rounded-full;
 }
 
 .node-actions {
-  @apply flex items-center gap-0.5 opacity-0 transition-opacity;
+  @apply flex items-center gap-1 opacity-0 transition-opacity duration-200;
 }
 
 .node-item:hover .node-actions,
@@ -191,7 +196,11 @@ function handleClick() {
 }
 
 .action-btn {
-  @apply p-1 rounded hover:bg-gray-200 dark:hover:bg-dark-600
-         text-gray-500 dark:text-gray-400 transition-colors;
+  @apply p-1.5 rounded-lg hover:bg-navy-200 dark:hover:bg-navy-600
+         text-navy-500 dark:text-navy-400 transition-all duration-200;
+}
+
+.action-btn:hover {
+  @apply text-primary-600 dark:text-primary-400;
 }
 </style>
