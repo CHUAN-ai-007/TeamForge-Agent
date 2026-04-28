@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch *)",
+      "Bash(gh repo *)",
+      "Bash(ping -c 3 github.com)",
+      "Bash(curl -v https://github.com --connect-timeout 10)",
+      "Bash(git config *)",
+      "Bash(git remote *)",
+      "Bash(npx vue-tsc *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(break)",
+      "Bash(git tag *)",
+      "Bash(curl -I --connect-timeout 10 https://api.github.com)",
+      "Bash(curl *)",
+      "WebFetch(domain:github.com)",
+      "Read(//tmp/**)",
+      "Read(//tmp/get-web-design/**)",
+      "Bash(bash -s -- claude-code)",
+      "Bash(mkdir -p ~/.claude/skills)",
+      "Bash(cp /tmp/get-web-design/SKILL.md ~/.claude/skills/get-web-design.md)",
+      "Read(//c/Users/14385/.claude/**)",
+      "WebFetch(domain:www.quantplay.tech)",
+      "Bash(npm run *)",
+      "Bash(gh auth *)"
+    ]
+  }
+}

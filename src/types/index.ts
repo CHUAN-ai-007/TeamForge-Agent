@@ -32,6 +32,7 @@ export const DEFAULT_MODEL_CONFIG: AIModelConfig = {
 // ============ Agent 类型定义 ============
 
 export type AgentLevel = 'junior' | 'senior' | 'lead' | 'executive'
+export type AgentPLevel = 'P1' | 'P2' | 'P3' | 'P4' | 'P5'
 
 export interface AgentMeta {
   id: string
@@ -40,6 +41,7 @@ export interface AgentMeta {
   role: string
   department: string
   level: AgentLevel
+  pLevel?: AgentPLevel // P1-P5 等级
   tags: string[]
   permissions: string[]
   createdAt: string
@@ -243,4 +245,107 @@ export interface ToastMessage {
   type: 'success' | 'error' | 'warning' | 'info'
   message: string
   duration?: number
+}
+
+// ============ 工作流类型定义 ============
+
+export type WorkflowNodeType = 'start' | 'end' | 'task' | 'approval' | 'condition'
+export type WorkflowStatus = 'draft' | 'active' | 'archived'
+export type NodeRuntimeStatus = 'pending' | 'running' | 'completed' | 'failed' | 'skipped'
+
+// 节点输入定义
+export interface NodeInput {
+  id: string
+  name: string
+  type: 'text' | 'file' | 'reference' // reference 引用上游节点输出
+  required: boolean
+  description: string
+  defaultValue?: string
+  sourceNodeId?: string // 如果是 reference，指定来源节点
+  sourceOutputName?: string // 引用来源节点的哪个输出
+}
+
+// 节点输出定义
+export interface NodeOutput {
+  id: string
+  name: string
+  type: 'text' | 'file' | 'json'
+  description: string
+}
+
+// 节点执行日志
+export interface NodeLog {
+  id: string
+  timestamp: string
+  level: 'info' | 'warning' | 'error'
+  message: string
+}
+
+// 节点运行时状态
+export interface NodeRuntimeState {
+  status: NodeRuntimeStatus
+  startTime?: string
+  endTime?: string
+  outputData?: Record<string, any> // 实际输出数据
+  logs: NodeLog[]
+  error?: string
+}
+
+// 工作流节点
+export interface WorkflowNode {
+  id: string
+  workflowId: string
+  name: string // 节点名称：如"需求分析"
+  description: string // 节点描述
+  type: WorkflowNodeType
+  position: { x: number; y: number } // 流程图位置
+
+  // 执行配置
+  agentId: string | null // 执行Agent的ID
+
+  // 输入输出定义
+  inputs: NodeInput[] // 输入参数定义
+  outputs: NodeOutput[] // 输出物定义
+
+  // 执行提示词模板
+  promptTemplate: string // 给Agent的提示词模板，可使用 {{input.xxx}} 和 {{nodes.nodeId.outputs.xxx}} 变量
+
+  // 运行时状态（仅在执行时存在）
+  runtimeState?: NodeRuntimeState
+}
+
+// 工作流边（连接）
+export interface WorkflowEdge {
+  id: string
+  workflowId: string
+  source: string // 源节点ID
+  target: string // 目标节点ID
+  condition?: string // 条件表达式（用于条件分支）
+}
+
+// 工作流运行实例
+export interface WorkflowRun {
+  id: string
+  workflowId: string
+  teamId: string
+  name: string // 运行实例名称
+  status: 'running' | 'completed' | 'failed' | 'paused'
+  triggerType: 'manual' | 'schedule' | 'webhook'
+  startTime: string
+  endTime?: string
+  nodeStates: Record<string, NodeRuntimeState> // key: nodeId
+  context: Record<string, any> // 全局上下文数据
+}
+
+// 工作流定义
+export interface Workflow {
+  id: string
+  teamId: string
+  name: string
+  description: string
+  status: WorkflowStatus
+  createdAt: string
+  updatedAt: string
+  nodes: WorkflowNode[]
+  edges: WorkflowEdge[] // 节点连接关系
 }

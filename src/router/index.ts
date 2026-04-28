@@ -11,6 +11,9 @@ import Agents from '@/views/agents/Agents.vue'
 import AgentDetail from '@/views/agents/AgentDetail.vue'
 import TeamChat from '@/views/chat/TeamChat.vue'
 import Settings from '@/views/settings/Settings.vue'
+import WorkflowList from '@/views/workflows/WorkflowList.vue'
+import WorkflowDesigner from '@/views/workflows/WorkflowDesigner.vue'
+import WorkflowRuns from '@/views/workflows/WorkflowRuns.vue'
 import NotFound from '@/views/NotFound.vue'
 
 const routes: RouteRecordRaw[] = [
@@ -82,6 +85,30 @@ const routes: RouteRecordRaw[] = [
     name: 'Settings',
     component: Settings,
     meta: { title: '设置' },
+  },
+  {
+    path: '/workflows',
+    name: 'Workflows',
+    component: WorkflowList,
+    meta: { title: '工作与任务' },
+  },
+  {
+    path: '/workflows/new',
+    name: 'NewWorkflow',
+    component: WorkflowDesigner,
+    meta: { title: '新建工作流' },
+  },
+  {
+    path: '/workflows/:id/design',
+    name: 'WorkflowDesigner',
+    component: WorkflowDesigner,
+    meta: { title: '设计工作流' },
+  },
+  {
+    path: '/workflows/:id/runs',
+    name: 'WorkflowRuns',
+    component: WorkflowRuns,
+    meta: { title: '运行记录' },
   },
   {
     path: '/:pathMatch(.*)*',

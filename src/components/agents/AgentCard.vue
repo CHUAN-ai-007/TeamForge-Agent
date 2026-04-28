@@ -30,6 +30,20 @@
         <span class="level-badge" :class="`level-${agent.meta.level}`">
           {{ levelText[agent.meta.level] }}
         </span>
+        <!-- P等级选择器 -->
+        <select
+          class="p-level-select"
+          :value="agent.meta.pLevel || ''"
+          @click.prevent
+          @change="handlePLevelChange($event)"
+        >
+          <option value="">等级</option>
+          <option value="P1">P1</option>
+          <option value="P2">P2</option>
+          <option value="P3">P3</option>
+          <option value="P4">P4</option>
+          <option value="P5">P5</option>
+        </select>
       </div>
 
       <!-- 对话按钮 -->
@@ -44,7 +58,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent } from '@/types'
+import type { Agent, AgentPLevel } from '@/types'
+import { useTeamsStore } from '@/stores/teams'
 
 interface Props {
   agent: Agent
@@ -61,8 +76,24 @@ const emit = defineEmits<{
   chat: [agent: Agent]
 }>()
 
+const teamsStore = useTeamsStore()
+
 function handleChat() {
   emit('chat', props.agent)
+}
+
+function handlePLevelChange(event: Event) {
+  const select = event.target as HTMLSelectElement
+  const pLevel = select.value as AgentPLevel | ''
+
+  // 更新 Agent 的 P 等级
+  teamsStore.updateAgent(props.agent.teamId, props.agent.id, {
+    meta: {
+      ...props.agent.meta,
+      pLevel: pLevel || undefined,
+      updatedAt: new Date().toISOString()
+    }
+  })
 }
 
 const levelText = {
@@ -136,7 +167,17 @@ const levelText = {
 }
 
 .agent-level {
-  @apply flex-shrink-0;
+  @apply flex-shrink-0 flex flex-col items-end gap-2;
+}
+
+.p-level-select {
+  @apply px-2 py-1 text-xs font-semibold rounded-lg
+         bg-navy-50 dark:bg-navy-800
+         border border-navy-200 dark:border-navy-700
+         text-navy-700 dark:text-navy-300
+         hover:border-primary-400 dark:hover:border-primary-500
+         focus:outline-none focus:ring-2 focus:ring-primary-500/20
+         cursor-pointer transition-all duration-200;
 }
 
 .level-badge {

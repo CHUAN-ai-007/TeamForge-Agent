@@ -1,7 +1,7 @@
 {
   "name": "teamforge-agent",
   "private": true,
-  "version": "2.5.0",
+  "version": "2.4.8",
   "type": "module",
   "description": "企业智能Agent团队生成系统 - TeamForge Agent",
   "scripts": {
