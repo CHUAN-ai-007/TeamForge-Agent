@@ -24,7 +24,8 @@
       "Read(//c/Users/14385/.claude/**)",
       "WebFetch(domain:www.quantplay.tech)",
       "Bash(npm run *)",
-      "Bash(gh auth *)"
+      "Bash(gh auth *)",
+      "Bash(npm install *)"
     ]
   }
 }

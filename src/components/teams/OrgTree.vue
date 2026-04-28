@@ -15,17 +15,29 @@
     </div>
 
     <div class="org-tree-content">
-      <OrgTreeNode
-        v-for="node in tree"
-        :key="node.id"
-        :node="node"
-        :selected-id="selectedId"
-        :level="0"
-        @select="handleSelect"
-        @add="handleAddChild"
-        @edit="handleEdit"
-        @delete="handleDelete"
-      />
+      <draggable
+        v-model="sortedTree"
+        item-key="id"
+        handle=".org-drag-handle"
+        animation="200"
+        ghost-class="ghost-org"
+        drag-class="dragging-org"
+        @end="handleDragEnd"
+      >
+        <template #item="{ element }">
+          <OrgTreeNode
+            :node="element"
+            :selected-id="selectedId"
+            :level="0"
+            :draggable="true"
+            @select="handleSelect"
+            @add="handleAddChild"
+            @edit="handleEdit"
+            @delete="handleDelete"
+            @reorder="handleReorder"
+          />
+        </template>
+      </draggable>
     </div>
 
     <!-- 添加/编辑组织弹窗 -->
@@ -74,6 +86,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import draggable from 'vuedraggable'
 import { useTeamsStore } from '@/stores/teams'
 import { useAppStore } from '@/stores/app'
 import OrgTreeNode from './OrgTreeNode.vue'
@@ -105,6 +118,14 @@ const selectedId = ref<string | null>(null)
 
 const currentTeamId = computed(() => props.teamId)
 const tree = computed(() => teamsStore.orgTree as TreeNode[])
+
+// 用于拖拽排序的副本
+const sortedTree = ref<TreeNode[]>([])
+
+// 监听 tree 变化，更新 sortedTree
+watch(tree, (newTree) => {
+  sortedTree.value = [...newTree]
+}, { immediate: true })
 
 const form = ref({
   name: '',
@@ -211,6 +232,40 @@ function handleSubmit() {
 
   showAddModal.value = false
 }
+
+// 处理拖拽排序结束
+function handleDragEnd() {
+  if (!props.teamId) return
+
+  // 获取排序后的组织单元ID列表
+  const unitIds = sortedTree.value.map(node => node.id)
+
+  // 更新每个组织单元的 sortOrder
+  unitIds.forEach((id, index) => {
+    const unit = teamsStore.currentTeam?.orgStructure.find(u => u.id === id)
+    if (unit) {
+      unit.sortOrder = index
+    }
+  })
+
+  teamsStore.saveToStorage()
+  appStore.showToast('排序已保存', 'success')
+}
+
+// 处理子组织重新排序
+function handleReorder(data: { parentId: string | null; unitIds: string[] }) {
+  if (!props.teamId) return
+
+  // 更新指定父组织下的子组织排序
+  data.unitIds.forEach((id, index) => {
+    const unit = teamsStore.currentTeam?.orgStructure.find(u => u.id === id)
+    if (unit && unit.parentId === data.parentId) {
+      unit.sortOrder = index
+    }
+  })
+
+  teamsStore.saveToStorage()
+}
 </script>
 
 <style scoped>
@@ -267,5 +322,14 @@ function handleSubmit() {
          bg-gradient-to-br from-red-500 to-red-600
          rounded-xl hover:from-red-600 hover:to-red-700
          transition-all duration-200;
+}
+
+/* 拖拽排序样式 */
+.ghost-org {
+  @apply opacity-50 bg-primary-50 dark:bg-primary-900/20 border-2 border-dashed border-primary-500;
+}
+
+.dragging-org {
+  @apply opacity-90 shadow-lg;
 }
 </style>

@@ -4,6 +4,7 @@ import { useTeamsStore } from '@/stores/teams'
 
 // 同步导入所有页面组件，避免懒加载问题
 import Home from '@/views/Home.vue'
+import Panorama from '@/views/panorama/Panorama.vue'
 import Teams from '@/views/teams/Teams.vue'
 import NewTeam from '@/views/teams/NewTeam.vue'
 import TeamDetail from '@/views/teams/TeamDetail.vue'
@@ -22,6 +23,12 @@ const routes: RouteRecordRaw[] = [
     name: 'Home',
     component: Home,
     meta: { title: '首页' },
+  },
+  {
+    path: '/panorama',
+    name: 'Panorama',
+    component: Panorama,
+    meta: { title: '全景' },
   },
   {
     path: '/teams',
