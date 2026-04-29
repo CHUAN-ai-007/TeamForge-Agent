@@ -88,15 +88,29 @@
           ref="inputRef"
         />
 
+        <!-- 发送按钮 -->
         <button
+          v-if="!isSending"
           class="send-btn"
-          :disabled="!inputMessage.trim() || isSending"
+          :disabled="!inputMessage.trim()"
           @click="handleSend"
         >
-          <svg v-if="!isSending" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
           </svg>
-          <span v-else class="spinner"></span>
+        </button>
+
+        <!-- 暂停按钮 -->
+        <button
+          v-else
+          class="pause-btn"
+          @click="handlePause"
+          title="暂停生成"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" />
+            <rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" />
+          </svg>
         </button>
       </div>
     </div>
@@ -113,6 +127,7 @@ import { useAppStore } from '@/stores/app'
 import MarkdownViewer from '@/components/common/MarkdownViewer.vue'
 import { chatCompletion, type ChatCompletionMessage } from '@/api/ai'
 import { formatDate } from '@/utils'
+import { buildChatSystemPrompt, parseAgentResponse } from '@/utils/agentPrompt'
 
 const route = useRoute()
 const teamsStore = useTeamsStore()
@@ -129,6 +144,7 @@ const inputMessage = ref('')
 const isSending = ref(false)
 const messagesContainer = ref<HTMLElement>()
 const inputRef = ref<HTMLTextAreaElement>()
+const abortController = ref<AbortController | null>(null)
 
 const quickPrompts = [
   '请介绍一下各自的分工',
@@ -197,39 +213,43 @@ async function handleSend() {
     inputRef.value.style.height = 'auto'
   }
 
+  // 添加用户消息
+  chatStore.addMessage(session.value.id, {
+    role: 'user',
+    content,
+  })
+
+  // 构建系统提示词
+  const systemPrompt = buildSystemPrompt()
+
+  // 构建历史消息
+  const historyMessages: ChatCompletionMessage[] = messages.value
+    .slice(-10) // 只取最近10条
+    .map(m => ({
+      role: m.role === 'user' ? 'user' : 'assistant',
+      content: m.content,
+      name: m.agentName,
+    }))
+
+  // 添加系统提示词到开头
+  historyMessages.unshift({ role: 'system', content: systemPrompt })
+
+  // 创建 AI 消息占位
+  const aiMessage = chatStore.addMessage(session.value.id, {
+    role: 'agent',
+    content: '',
+    isTyping: true,
+  })
+
+  // 创建 AbortController 用于取消请求
+  abortController.value = new AbortController()
+
   try {
-    // 添加用户消息
-    chatStore.addMessage(session.value.id, {
-      role: 'user',
-      content,
-    })
-
-    // 构建系统提示词
-    const systemPrompt = buildSystemPrompt()
-
-    // 构建历史消息
-    const historyMessages: ChatCompletionMessage[] = messages.value
-      .slice(-10) // 只取最近10条
-      .map(m => ({
-        role: m.role === 'user' ? 'user' : 'assistant',
-        content: m.content,
-        name: m.agentName,
-      }))
-
-    // 添加系统提示词到开头
-    historyMessages.unshift({ role: 'system', content: systemPrompt })
-
-    // 创建 AI 消息占位
-    const aiMessage = chatStore.addMessage(session.value.id, {
-      role: 'agent',
-      content: '',
-      isTyping: true,
-    })
-
     // 调用 AI
     const response = await chatCompletion(settingsStore.activeConfig, {
       messages: historyMessages,
       stream: true,
+      signal: abortController.value.signal,
       onStream: (chunk) => {
         if (aiMessage) {
           aiMessage.content += chunk.content
@@ -241,75 +261,56 @@ async function handleSend() {
 
     // 解析响应，提取发言者和内容
     if (aiMessage) {
-      const parsed = parseAgentResponse(response.content)
+      const parsed = handleParseAgentResponse(response.content)
       aiMessage.content = parsed.content
       aiMessage.agentName = parsed.agentName
       aiMessage.agentAvatar = parsed.agentAvatar
       aiMessage.isTyping = false
       chatStore.saveToStorage()
     }
-  } catch (error) {
-    console.error('发送失败:', error)
-    appStore.showToast(error instanceof Error ? error.message : '发送失败', 'error')
-  } finally {
-    isSending.value = false
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      // 用户取消，保留已生成的内容
+      if (aiMessage) {
+          aiMessage.isTyping = false
+          aiMessage.content += '\n\n[已暂停]'
+          chatStore.saveToStorage()
+        }
+      } else {
+        console.error('发送失败:', error)
+        appStore.showToast(error instanceof Error ? error.message : '发送失败', 'error')
+        if (aiMessage) {
+          aiMessage.isTyping = false
+          chatStore.saveToStorage()
+        }
+      }
+    } finally {
+      isSending.value = false
+      abortController.value = null
+    }
+}
+
+function handlePause() {
+  if (abortController.value) {
+    abortController.value.abort()
   }
 }
 
 function buildSystemPrompt(): string {
   const agents = team.value?.agents || []
+  const currentAgent = agents[0] // 默认由第一个Agent响应，实际应根据问题路由
 
-  let prompt = `你是一个企业智能 Agent 团队协作系统。当前团队 "${team.value?.info.name}" 有以下成员：\n\n`
+  if (!currentAgent) {
+    return '你是一个智能助手。'
+  }
 
-  agents.forEach(agent => {
-    prompt += `## ${agent.meta.name} (${agent.meta.role})\n`
-    prompt += `- 职级：${agent.meta.level}\n`
-    prompt += `- 专业：${agent.meta.tags.join(', ')}\n`
-    prompt += `- 人设：${agent.persona.identity.slice(0, 200)}\n\n`
-  })
-
-  prompt += `\n用户正在与整个团队对话。请根据问题内容，由最相关的 Agent 或多个 Agent 协作回答。`
-  prompt += `\n输出格式要求：以 "【Agent名称】" 开头，然后是回复内容。如需多人回答，可以分多段。`
-
-  return prompt
+  // 使用新的分层Prompt构建
+  return buildChatSystemPrompt(team.value?.info.name || '', agents, currentAgent)
 }
 
-function parseAgentResponse(content: string): { content: string; agentName?: string; agentAvatar?: string } {
-  // 尝试提取 Agent 名称
-  const match = content.match(/^【(.+?)】/)
-  if (match) {
-    const agentName = match[1]
-    const agent = team.value?.agents.find(a => a.meta.name === agentName)
-    return {
-      content: content.replace(/^【.+?】\s*/, ''),
-      agentName,
-      agentAvatar: agent?.meta.avatar,
-    }
-  }
-
-  // 尝试其他格式
-  const match2 = content.match(/^(.+?)[:：]/)
-  if (match2) {
-    const possibleName = match2[1].trim()
-    const agent = team.value?.agents.find(a =>
-      a.meta.name === possibleName || a.meta.role === possibleName
-    )
-    if (agent) {
-      return {
-        content: content.replace(/^.+?[:：]\s*/, ''),
-        agentName: agent.meta.name,
-        agentAvatar: agent.meta.avatar,
-      }
-    }
-  }
-
-  // 默认返回第一个 Agent
-  const defaultAgent = team.value?.agents[0]
-  return {
-    content,
-    agentName: defaultAgent?.meta.name || '团队助手',
-    agentAvatar: defaultAgent?.meta.avatar,
-  }
+function handleParseAgentResponse(content: string): { content: string; agentName?: string; agentAvatar?: string } {
+  // 使用 agentPrompt.ts 中的解析函数
+  return parseAgentResponse(content, team.value?.agents || [])
 }
 </script>
 
@@ -428,5 +429,9 @@ function parseAgentResponse(content: string): { content: string; agentName?: str
 
 .send-btn .spinner {
   @apply w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin;
+}
+
+.pause-btn {
+  @apply w-11 h-11 bg-amber-500 hover:bg-amber-600 text-white rounded-lg flex items-center justify-center transition-colors;
 }
 </style>

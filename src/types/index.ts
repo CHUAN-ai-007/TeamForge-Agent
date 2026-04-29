@@ -231,6 +231,54 @@ export interface GenerationTask {
   error?: string
 }
 
+// ============ 主从协作任务 ============
+
+export type CollaborationTaskStatus = 'pending' | 'analyzing' | 'assigning' | 'executing' | 'reviewing' | 'completed' | 'error'
+export type SubTaskStatus = 'pending' | 'assigned' | 'executing' | 'completed' | 'failed'
+
+export interface SubTask {
+  id: string
+  title: string
+  description: string
+  agentId: string
+  agentName: string
+  status: SubTaskStatus
+  dependencies: string[] // 依赖的其他子任务ID
+  output?: string // 子任务执行结果
+  startedAt?: string
+  completedAt?: string
+  error?: string
+}
+
+export interface CollaborationTask {
+  id: string
+  teamId: string
+  title: string
+  description: string // 用户的原始需求
+  status: CollaborationTaskStatus
+  leaderAgentId: string
+  leaderAgentName: string
+  subTasks: SubTask[]
+  executionPlan?: string // 主Agent制定的执行计划
+  finalOutput?: string // 最终汇总结果
+  messages: CollaborationMessage[]
+  createdAt: string
+  updatedAt: string
+  startedAt?: string
+  completedAt?: string
+}
+
+export interface CollaborationMessage {
+  id: string
+  role: 'user' | 'leader' | 'sub' | 'system'
+  agentId?: string
+  agentName?: string
+  content: string
+  timestamp: number
+  type: 'chat' | 'task_assignment' | 'task_result' | 'plan' | 'summary'
+  subTaskId?: string
+}
+
 // ============ UI 类型 ============
 
 export interface NavItem {

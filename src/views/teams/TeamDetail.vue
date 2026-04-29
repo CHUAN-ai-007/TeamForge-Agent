@@ -30,6 +30,12 @@
           </svg>
           删除
         </button>
+        <router-link :to="`/teams/${team.info.id}/collaboration`" class="btn-amber">
+          <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          </svg>
+          主从协作
+        </router-link>
         <router-link :to="`/teams/${team.info.id}/chat`" class="btn-primary">
           <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -439,6 +445,14 @@ function handleAgentChat(agent: Agent) {
   @apply inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium
          text-red-600 hover:text-red-700 hover:bg-red-50
          dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20
+         transition-colors;
+}
+
+.btn-amber {
+  @apply inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium
+         text-amber-700 hover:text-amber-800 hover:bg-amber-50
+         dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-900/20
+         bg-amber-100 dark:bg-amber-900/30
          transition-colors;
 }
 

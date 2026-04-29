@@ -25,7 +25,13 @@
       "WebFetch(domain:www.quantplay.tech)",
       "Bash(npm run *)",
       "Bash(gh auth *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(awk NR>=170 && NR<=180 *)",
+      "Bash(awk NR==279 *)",
+      "Bash(awk NR>=288 && NR<=295 *)",
+      "Bash(awk NR==173 *)",
+      "Bash(node -e ' *)",
+      "Bash(git clone *)"
     ]
   }
 }

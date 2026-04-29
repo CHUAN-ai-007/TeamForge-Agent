@@ -15,6 +15,7 @@ import Settings from '@/views/settings/Settings.vue'
 import WorkflowList from '@/views/workflows/WorkflowList.vue'
 import WorkflowDesigner from '@/views/workflows/WorkflowDesigner.vue'
 import WorkflowRuns from '@/views/workflows/WorkflowRuns.vue'
+import TeamCollaboration from '@/views/collaboration/TeamCollaboration.vue'
 import NotFound from '@/views/NotFound.vue'
 
 const routes: RouteRecordRaw[] = [
@@ -86,6 +87,12 @@ const routes: RouteRecordRaw[] = [
     name: 'TeamChat',
     component: TeamChat,
     meta: { title: '团队对话' },
+  },
+  {
+    path: '/teams/:id/collaboration',
+    name: 'TeamCollaboration',
+    component: TeamCollaboration,
+    meta: { title: '主从协作' },
   },
   {
     path: '/settings',

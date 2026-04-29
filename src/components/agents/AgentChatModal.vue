@@ -93,15 +93,29 @@
             ref="inputRef"
           />
 
+          <!-- 发送按钮 -->
           <button
+            v-if="!isSending"
             class="send-btn"
-            :disabled="!inputMessage.trim() || isSending"
+            :disabled="!inputMessage.trim()"
             @click="handleSend"
           >
-            <svg v-if="!isSending" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
-            <span v-else class="spinner"></span>
+          </button>
+
+          <!-- 暂停按钮 -->
+          <button
+            v-else
+            class="pause-btn"
+            @click="handlePause"
+            title="暂停生成"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" />
+              <rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" />
+            </svg>
           </button>
         </div>
       </div>
@@ -118,6 +132,7 @@ import Modal from '@/components/common/Modal.vue'
 import MarkdownViewer from '@/components/common/MarkdownViewer.vue'
 import { chatCompletion, type ChatCompletionMessage } from '@/api/ai'
 import { formatDate } from '@/utils'
+import { buildAgentSystemPrompt } from '@/utils/agentPrompt'
 import type { Agent, ChatMessage } from '@/types'
 
 interface Props {
@@ -150,6 +165,7 @@ const inputMessage = ref('')
 const isSending = ref(false)
 const messagesContainer = ref<HTMLElement>()
 const inputRef = ref<HTMLTextAreaElement>()
+const abortController = ref<AbortController | null>(null)
 
 const quickPrompts = computed(() => {
   if (!props.agent) return []
@@ -173,62 +189,6 @@ const kbDocCount = computed(() => {
 const ragEnabled = computed(() => {
   return props.agent?.ragSettings?.enabled && hasKnowledgeBase.value
 })
-
-// 从知识库检索相关内容
-function retrieveKnowledge(query: string): string {
-  if (!ragEnabled.value || !props.agent?.knowledgeBase) return ''
-
-  const docs = props.agent.knowledgeBase
-  const topK = props.agent.ragSettings?.topK || 3
-  const maxLength = props.agent.ragSettings?.maxContextLength || 2000
-
-  // 简单的关键词匹配检索
-  const scored = docs.map(doc => {
-    const score = calculateRelevance(query, doc.content)
-    return { doc, score }
-  })
-
-  // 按相关度排序并取前 topK
-  scored.sort((a, b) => b.score - a.score)
-  const topDocs = scored.slice(0, topK)
-
-  // 构建知识上下文
-  let context = ''
-  let totalLength = 0
-
-  for (const { doc } of topDocs) {
-    const content = `## ${doc.title}\n${doc.content.substring(0, 1000)}\n\n`
-    if (totalLength + content.length > maxLength) break
-    context += content
-    totalLength += content.length
-  }
-
-  return context.trim()
-}
-
-// 计算查询与文档内容的相关度（简单的关键词匹配）
-function calculateRelevance(query: string, content: string): number {
-  const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 1)
-  const contentLower = content.toLowerCase()
-
-  if (queryWords.length === 0) return 0
-
-  let matchCount = 0
-  for (const word of queryWords) {
-    if (contentLower.includes(word)) {
-      matchCount++
-    }
-  }
-
-  // 基础匹配分数 + 匹配词频加权
-  const baseScore = matchCount / queryWords.length
-  const frequencyBonus = queryWords.reduce((sum, word) => {
-    const matches = (contentLower.match(new RegExp(word, 'g')) || []).length
-    return sum + Math.min(matches, 3) * 0.05
-  }, 0)
-
-  return Math.min(baseScore + frequencyBonus, 1)
-}
 
 onMounted(() => {
   scrollToBottom()
@@ -298,43 +258,44 @@ async function handleSend() {
     inputRef.value.style.height = 'auto'
   }
 
+  // 添加用户消息
+  chatStore.addMessage(session.value.id, {
+    role: 'user',
+    content,
+  })
+
+  // 构建系统提示词（包含知识库检索）
+  const systemPrompt = buildSystemPrompt(props.agent, content)
+
+  // 构建历史消息
+  const historyMessages: ChatCompletionMessage[] = messages.value
+    .slice(-10)
+    .map(m => ({
+      role: m.role === 'user' ? 'user' : 'assistant',
+      content: m.content,
+    }))
+
+  historyMessages.unshift({ role: 'system', content: systemPrompt })
+
+  // 创建 AI 消息占位
+  const aiMessage = chatStore.addMessage(session.value.id, {
+    role: 'agent',
+    content: '',
+    agentId: props.agent.id,
+    agentName: props.agent.meta.name,
+    agentAvatar: props.agent.meta.avatar,
+    isTyping: true,
+  })
+
+  // 创建 AbortController 用于取消请求
+  abortController.value = new AbortController()
+
   try {
-    // 添加用户消息
-    chatStore.addMessage(session.value.id, {
-      role: 'user',
-      content,
-    })
-
-    // RAG: 从知识库检索相关内容
-    const relevantKnowledge = retrieveKnowledge(content)
-
-    // 构建系统提示词
-    const systemPrompt = buildSystemPrompt(props.agent, relevantKnowledge)
-
-    // 构建历史消息
-    const historyMessages: ChatCompletionMessage[] = messages.value
-      .slice(-10)
-      .map(m => ({
-        role: m.role === 'user' ? 'user' : 'assistant',
-        content: m.content,
-      }))
-
-    historyMessages.unshift({ role: 'system', content: systemPrompt })
-
-    // 创建 AI 消息占位
-    const aiMessage = chatStore.addMessage(session.value.id, {
-      role: 'agent',
-      content: '',
-      agentId: props.agent.id,
-      agentName: props.agent.meta.name,
-      agentAvatar: props.agent.meta.avatar,
-      isTyping: true,
-    })
-
     // 调用 AI
     const response = await chatCompletion(settingsStore.activeConfig, {
       messages: historyMessages,
       stream: true,
+      signal: abortController.value.signal,
       onStream: (chunk) => {
         if (aiMessage) {
           aiMessage.content += chunk.content
@@ -349,48 +310,54 @@ async function handleSend() {
       aiMessage.isTyping = false
       chatStore.saveToStorage()
     }
-  } catch (error) {
-    console.error('发送失败:', error)
-    appStore.showToast(error instanceof Error ? error.message : '发送失败', 'error')
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      // 用户取消，保留已生成的内容
+      if (aiMessage) {
+        aiMessage.isTyping = false
+        aiMessage.content += '\n\n[已暂停]'
+        chatStore.saveToStorage()
+      }
+    } else {
+      console.error('发送失败:', error)
+      appStore.showToast(error instanceof Error ? error.message : '发送失败', 'error')
+      if (aiMessage) {
+        aiMessage.isTyping = false
+        chatStore.saveToStorage()
+      }
+    }
   } finally {
     isSending.value = false
+    abortController.value = null
   }
 }
 
-function buildSystemPrompt(agent: Agent, knowledgeContext: string = ''): string {
-  let prompt = `你是 ${agent.meta.name}，${agent.meta.role}。
-
-## 你的基本信息
-- 职级：${agent.meta.level}
-- 部门：${agent.meta.department}
-- 专业领域：${agent.meta.tags.join(', ')}
-
-## 你的人设
-${agent.persona.identity}
-
-## 你的性格
-${agent.persona.personality}
-
-## 你的背景
-${agent.persona.background}
-
-## 你的沟通风格
-${agent.persona.communicationStyle}
-
-## 你的职责
-${agent.work.responsibilities.join('\n')}
-
-## 你的工作流程
-${agent.work.workflow}`
-
-  // 如果有知识库上下文，添加到提示词中
-  if (knowledgeContext) {
-    prompt += `\n\n## 相关知识库内容\n以下是与用户问题相关的内部知识库信息，请优先参考这些内容回答：\n\n${knowledgeContext}\n\n请基于上述知识库内容回答问题。如果知识库中没有相关信息，请基于你的人设和专业知识回答。`
+function handlePause() {
+  if (abortController.value) {
+    abortController.value.abort()
   }
+}
 
-  prompt += `\n\n请完全代入这个角色与用户对话，以第一人称回答用户的问题。保持专业、友好、有帮助的态度。`
+function buildSystemPrompt(agent: Agent, userInput: string): string {
+  // 使用新的分层Prompt构建
+  const basePrompt = buildAgentSystemPrompt(agent, {
+    input: userInput,
+    history: session.value?.messages.slice(-5)
+  })
 
-  return prompt
+  // 添加对话场景特定的要求
+  return `${basePrompt}
+
+## 对话场景要求
+
+1. **以第一人称回复**：始终使用"我"来指代自己
+2. **保持角色代入**：完全进入${agent.meta.name}的身份和思维模式
+3. **专业且友好**：既展现专业素养，又保持 approachable
+4. **主动深入**：如果用户问题不够明确，主动提问澄清
+5. **利用知识库**：充分运用Domain Biz-KB中的专业知识
+6. **承认边界**：如果问题超出你的职责范围，坦诚说明并建议找谁
+
+请开始与用户对话。`
 }
 </script>
 
@@ -634,5 +601,12 @@ ${agent.work.workflow}`
 
 .send-btn .spinner {
   @apply w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin;
+}
+
+.pause-btn {
+  @apply w-11 h-11 bg-gradient-to-br from-amber-500 to-orange-600
+         hover:from-amber-600 hover:to-orange-700
+         text-white rounded-xl flex items-center justify-center transition-all duration-200
+         shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex-shrink-0;
 }
 </style>

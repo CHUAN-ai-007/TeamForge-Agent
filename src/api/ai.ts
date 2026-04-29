@@ -50,6 +50,7 @@ export interface ChatCompletionOptions {
   topP?: number
   stream?: boolean
   onStream?: (chunk: StreamChunk) => void
+  signal?: AbortSignal
 }
 
 /**
@@ -78,6 +79,7 @@ export async function chatCompletion(
       method: 'POST',
       headers,
       body: JSON.stringify(requestBody),
+      signal: options.signal,
     })
 
     if (!response.ok) {
